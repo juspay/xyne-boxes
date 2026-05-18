@@ -94,25 +94,13 @@ pu_launch() {
 }
 
 pu_create() {
-  local name=""
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      --name) name="$2"; shift 2 ;;
-      *) shift ;;
-    esac
-  done
+  local name="${1:-}"
   pu_launch "create base-container${name:+ $name}" "Creating instance"
 }
 
 pu_fork() {
-  local source="${1:?Usage: pu fork <source> [--name <name>]}" name=""
+  local source="${1:?Usage: pu fork <source> [name]}" name="${2:-}"
   shift
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      --name) name="$2"; shift 2 ;;
-      *) shift ;;
-    esac
-  done
   pu_launch "fork $source${name:+ $name}" "Forking $source"
 }
 
@@ -202,8 +190,8 @@ case "$cmd" in
 Usage: pu <command>
 
 Commands:
-  create [--name <name>]           Create instance and print a pu connect command
-  fork <source> [--name <name>]    Fork an existing instance and print a pu connect command
+  create [name]                    Create instance and print a pu connect command
+  fork <source> [name]             Fork an existing instance and print a pu connect command
   connect <name> [ssh args ...]    Connect to an instance via ssh; use -- before a remote command
   destroy <name>                   Destroy an instance
   list                             List your instances
