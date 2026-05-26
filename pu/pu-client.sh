@@ -29,9 +29,13 @@ client_auth_init() {
     step ca bootstrap --force
   fi
 
-  if [ ! -f "$PU_STATE_DIR/key-cert.pub" ] || step ssh needs-renewal "$PU_STATE_DIR/key-cert.pub" --expires-in 75% 2>/dev/null; then
+  if [ ! -f "$PU_STATE_DIR/key-cert.pub" ] ||
+    [ ! -f "$PU_STATE_DIR/key-cert.provisioner" ] ||
+    [ "$(cat "$PU_STATE_DIR/key-cert.provisioner")" != GoogleBrowserless ] ||
+    step ssh needs-renewal "$PU_STATE_DIR/key-cert.pub" --expires-in 75% 2>/dev/null; then
     echo "Signing SSH key..." >&2
     step ssh certificate --force --no-agent --no-password --insecure --provisioner GoogleBrowserless --console me "$PU_STATE_DIR/key"
+    echo GoogleBrowserless > "$PU_STATE_DIR/key-cert.provisioner"
   fi
 
   _pu_instance_ssh_opts=("${_pu_mac_opts[@]}" -i "$PU_STATE_DIR/key" -o "CertificateFile=$PU_STATE_DIR/key-cert.pub" -o IdentitiesOnly=yes)
