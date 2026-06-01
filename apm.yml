@@ -1,0 +1,6 @@
+name: project-unknown
+version: 1.0.0
+description: Shared APM source for the pu agent skill — provision and drive Incus boxes
+author: juspay
+license: MIT
+type: hybrid
