@@ -80,9 +80,6 @@ write_ssh_config() {
   local proxy_cmd
   proxy_cmd=$(pu_proxy_command "$name")
 
-  local existed=0
-  [ -f "$dir/ssh_config" ] && existed=1
-
   {
     echo "Host $name"
     echo "  User $PU_ADMIN"
@@ -96,41 +93,35 @@ write_ssh_config() {
     echo "  StrictHostKeyChecking no"
     echo "  UserKnownHostsFile /dev/null"
   } > "$dir/ssh_config"
-
-  if [ "$existed" = "1" ]; then
-    echo "↻ ssh_config: $dir/ssh_config (rewrote)" >&2
-  else
-    echo "✔ ssh_config: $dir/ssh_config" >&2
-  fi
 }
 
 pu_launch() {
-  local cmd="$1" label="$2"
+  local name="$1" cmd="$2" label="$3"
   client_auth_init
   echo "$label..." >&2
-  local result name
-  result=$(pu_ssh "$cmd")
-  name=$(printf '%s\n' "$result" | tr -d '\r' | awk '/(^| )OK / {print $NF; exit}')
-  if [ -z "$name" ]; then
-    echo "pu: server did not return 'OK <name>'; captured (${#result} bytes):" >&2
-    printf '%q\n' "$result" >&2
-    exit 1
-  fi
+  pu_ssh "$cmd" > /dev/null || return 1
   echo "Waiting for instance to be ready..." >&2
-  pu_ssh "wait $name" > /dev/null
+  pu_ssh "wait $name" > /dev/null || return 1
   write_ssh_config "$name"
   echo "$name"
 }
 
 pu_create() {
-  local name="${1:-}"
-  pu_launch "create base-container${name:+ $name}" "Creating instance"
+  [ $# -eq 1 ] || {
+    echo "Usage: pu create <name>" >&2
+    exit 1
+  }
+  local name="$1"
+  pu_launch "$name" "create base-container $name" "Creating instance"
 }
 
 pu_fork() {
-  local source="${1:?Usage: pu fork <source> [name]}" name="${2:-}"
-  shift
-  pu_launch "fork $source${name:+ $name}" "Forking $source"
+  [ $# -eq 2 ] || {
+    echo "Usage: pu fork <source> <name>" >&2
+    exit 1
+  }
+  local source="$1" name="$2"
+  pu_launch "$name" "fork $source $name" "Forking $source"
 }
 
 pu_connect() {
@@ -164,10 +155,6 @@ pu_connect() {
 
   client_auth_init
 
-  if [ ! -f "$PU_STATE_DIR/$name/ssh_config" ]; then
-    write_ssh_config "$name"
-  fi
-
   local proxy_cmd
   proxy_cmd=$(pu_proxy_command "$name")
 
@@ -183,15 +170,6 @@ pu_connect() {
     -l "$PU_ADMIN" \
     -- "$name" \
     ${remote_cmd[@]+"${remote_cmd[@]}"}
-}
-
-pu_config() {
-  local name="${1:-}"
-  [ -z "$name" ] && {
-    echo "Usage: pu config <name>" >&2
-    exit 1
-  }
-  write_ssh_config "$name"
 }
 
 pu_destroy() {
@@ -215,26 +193,21 @@ cmd="${1:-}"
 case "$cmd" in
   create)
     shift
-    name=$(pu_create "$@")
-    echo "$name"
+    name="${1:-}"
+    pu_create "$@"
     echo "Connect: pu connect $name" >&2
     ;;
 
   fork)
     shift
-    name=$(pu_fork "$@")
-    echo "$name"
+    name="${2:-}"
+    pu_fork "$@"
     echo "Connect: pu connect $name" >&2
     ;;
 
   connect)
     shift
     pu_connect "$@"
-    ;;
-
-  config)
-    shift
-    pu_config "$@"
     ;;
 
   destroy)
@@ -256,10 +229,9 @@ case "$cmd" in
 Usage: pu <command>
 
 Commands:
-  create [name]                    Create instance and print a pu connect command
-  fork <source> [name]             Fork an existing instance and print a pu connect command
+  create <name>                    Create instance and print a pu connect command
+  fork <source> <name>             Fork an existing instance and print a pu connect command
   connect <name> [ssh args ...]    Connect to an instance via ssh; use -- before a remote command
-  config <name>                    (Re)write ~/.pu-state/<name>/ssh_config from current PU_HOST
   destroy <name> [name ...]        Destroy one or more instances
   list                             List your instances
   version                          Print bash, ssh, and step-cli versions
