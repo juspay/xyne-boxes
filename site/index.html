@@ -76,15 +76,16 @@
       .steps { margin-top: 34px; border-top: 2px solid var(--ink); }
       .step { display: grid; grid-template-columns: 90px 1fr; border-bottom: 2px solid var(--ink); }
       .step:last-child { border-bottom: 0; }
-      .step .sn { font-size: 40px; font-weight: 700; border-right: 2px solid var(--ink); display: flex; align-items: flex-start; justify-content: center; padding: 20px 0; }
+      .step .sn { font-size: 40px; font-weight: 700; line-height: 1; border-right: 2px solid var(--ink); display: flex; align-items: flex-start; justify-content: center; padding: 20px 0; }
       .step .sc { padding: 22px 24px; min-width: 0; }
+      .step h3 { line-height: 1; }
       .step h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
       .tagpill { background: var(--pink); color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; }
       .step p { margin: 0 0 14px; font-family: var(--mono); font-size: 13.5px; line-height: 1.65; }
       .step p:last-child { margin-bottom: 0; }
       a.link { border-bottom: 2px solid var(--ink); } a.link:hover { color: var(--pink); border-color: var(--pink); }
 
-      .snip { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; align-items: start; background: var(--ink); color: var(--paper); padding: 13px 12px 13px 15px; margin: 4px 0 0; }
+      .snip { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; align-items: center; background: var(--ink); color: var(--paper); padding: 14px 12px 14px 16px; margin: 4px 0 0; }
       .snip pre { margin: 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; display: flex; gap: 10px; min-width: 0; }
       .snip pre code { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
       .snip .p { color: var(--lime); user-select: none; flex: 0 0 auto; }
@@ -280,7 +281,7 @@ ssh-add ~/.ssh/id_ed25519</code></pre>
       <h2>What<br>you get</h2>
       <p class="sub">Every box is an <a class="link" href="https://linuxcontainers.org/incus/">Incus</a> container cloned from a loaded <a class="link" href="https://nixos.org">NixOS</a> base image — not a bare machine.</p>
       <div class="grid" style="margin-top:34px">
-        <div class="card"><h4>Real dev env</h4><p>git, vim, tmux, direnv, starship and more, ready to go. VS Code Remote and nix-ld work out of the box.</p></div>
+        <div class="card"><h4>Real dev env</h4><p>git, vim, tmux, direnv, starship and more, ready to go. <a class="link" href="https://code.visualstudio.com/docs/remote/ssh">VS Code Remote</a> works out of the box.</p></div>
         <div class="card"><h4>Warm Nix</h4><p>Flakes are on and the box shares the host's <code>/nix/store</code> — dev shells are fast and common Juspay dev-envs are pre-cached.</p></div>
         <div class="card"><h4>Persistent</h4><p>You land as <code>toor</code> with your own home. It survives stop/start — gone only when you run <code>destroy</code>.</p></div>
         <div class="card"><h4>Extras</h4><p><code>list</code> shows your boxes, <code>fork &lt;source&gt; &lt;name&gt;</code> clones one, and <code>destroy &lt;name&gt;</code> removes it.</p></div>
