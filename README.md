@@ -30,6 +30,10 @@ nix run https://github.com/juspay/xyne-boxes/archive/main.zip <command>
 | `list` | List your boxes |
 | `version` | Print `bash`, `ssh`, and `step-cli` versions |
 
+## Support
+
+Questions or feedback? Join `#xyne-boxes-feedback` on Xyne Spaces.
+
 ## The website
 
 The site in [`site/`](site/) deploys to GitHub Pages via
