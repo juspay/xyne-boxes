@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>xyne-boxes — remote dev boxes, one SSH away</title>
+    <meta name="description" content="Spin up an Incus-backed Linux dev box and SSH straight in. One command creates it, Tailscale gets you on the network, and short-lived SSH certificates handle the rest.">
+    <link rel="canonical" href="https://juspay.github.io/xyne-boxes/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="xyne-boxes">
+    <meta property="og:title" content="xyne-boxes — remote dev boxes, one SSH away">
+    <meta property="og:description" content="Spin up an Incus-backed Linux dev box and SSH straight in. One command creates it, Tailscale gets you on the network, and short-lived SSH certificates handle the rest.">
+    <meta property="og:url" content="https://juspay.github.io/xyne-boxes/">
+    <meta property="og:image" content="https://juspay.github.io/xyne-boxes/og.svg">
+    <meta property="og:image:alt" content="xyne-boxes — spin up a box, SSH in.">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="xyne-boxes — remote dev boxes, one SSH away">
+    <meta name="twitter:description" content="Spin up an Incus-backed Linux dev box and SSH straight in. One command creates it, Tailscale gets you on the network.">
+    <meta name="twitter:image" content="https://juspay.github.io/xyne-boxes/og.svg">
+    <meta name="twitter:image:alt" content="xyne-boxes — spin up a box, SSH in.">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f3f1e9; --ink: #0c0c0c; --lime: #c7f501; --pink: #ff2e88;
+        --sans: "Space Grotesk", system-ui, -apple-system, sans-serif;
+        --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+      a { color: var(--ink); text-decoration: none; }
+      :not(pre) > code { font-family: var(--mono); font-size: .82em; background: var(--ink); color: var(--paper); padding: 1px 5px; }
+
+      .top { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--ink); padding: 14px 28px; position: sticky; top: 0; background: var(--paper); z-index: 20; }
+      .brand { font-family: var(--mono); font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: -.02em; }
+      .nav { display: flex; }
+      .nav a { font-family: var(--mono); font-size: 12px; text-transform: uppercase; margin-left: 18px; border-bottom: 2px solid transparent; padding-bottom: 2px; }
+      .nav a:hover { border-color: var(--ink); }
+
+      section { border-bottom: 3px solid var(--ink); }
+      .pad { padding: 46px 28px; max-width: 1200px; margin: 0 auto; }
+
+      /* hero */
+      .hero { background: var(--ink); color: var(--paper); }
+      .hero .pad { padding: 62px 28px; }
+      .eyebrow { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; background: var(--lime); color: var(--ink); display: inline-block; padding: 5px 11px; font-weight: 700; }
+      h1 { font-size: clamp(52px, 12vw, 150px); font-weight: 700; line-height: .86; letter-spacing: -.05em; margin: 24px 0 0; text-transform: uppercase; }
+      h1 .out { color: transparent; -webkit-text-stroke: 2px var(--paper); }
+      .hero-row { display: flex; flex-wrap: wrap; gap: 30px 40px; align-items: flex-end; justify-content: space-between; margin-top: 38px; }
+      .lead { font-family: var(--mono); font-size: 15px; line-height: 1.65; max-width: 460px; color: #d7d5cc; }
+      .lead b { color: var(--lime); }
+      .cta { display: flex; gap: 12px; margin-top: 24px; }
+      .btn { font-family: var(--mono); font-size: 13px; font-weight: 500; text-transform: uppercase; padding: 11px 18px; border: 2px solid var(--paper); }
+      .btn-p { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+      .btn-p:hover { background: var(--paper); border-color: var(--paper); }
+      .btn-g { color: var(--paper); } .btn-g:hover { background: var(--paper); color: var(--ink); }
+
+      .listbox { border: 2px solid var(--paper); font-family: var(--mono); font-size: 12px; min-width: 350px; }
+      .listbox .lh { background: var(--paper); color: var(--ink); font-weight: 700; padding: 7px 12px; text-transform: uppercase; letter-spacing: .05em; }
+      .listbox pre { margin: 0; padding: 12px; color: var(--paper); white-space: pre; overflow-x: auto; line-height: 1.5; }
+      .listbox pre .g { color: var(--lime); }
+
+      .kicker { font-family: var(--mono); font-weight: 700; font-size: 14px; }
+      .kicker .n { background: var(--ink); color: var(--lime); padding: 2px 8px; margin-right: 10px; }
+      h2 { font-size: clamp(34px, 6vw, 62px); font-weight: 700; text-transform: uppercase; letter-spacing: -.03em; line-height: .95; margin: 16px 0 0; }
+      .sub { font-family: var(--mono); font-size: 14px; margin: 14px 0 0; max-width: 640px; }
+
+      .steps { margin-top: 34px; border-top: 2px solid var(--ink); }
+      .step { display: grid; grid-template-columns: 90px 1fr; border-bottom: 2px solid var(--ink); }
+      .step:last-child { border-bottom: 0; }
+      .step .sn { font-size: 40px; font-weight: 700; line-height: 1; border-right: 2px solid var(--ink); display: flex; align-items: flex-start; justify-content: center; padding: 20px 0; }
+      .step .sc { padding: 22px 24px; min-width: 0; }
+      .step h3 { line-height: 1; }
+      .step h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .tagpill { background: var(--pink); color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; }
+      .step p { margin: 0 0 14px; font-family: var(--mono); font-size: 13.5px; line-height: 1.65; }
+      .step p:last-child { margin-bottom: 0; }
+      a.link { border-bottom: 2px solid var(--ink); } a.link:hover { color: var(--pink); border-color: var(--pink); }
+
+      .snip { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; align-items: center; background: var(--ink); color: var(--paper); padding: 14px 12px 14px 16px; margin: 4px 0 0; }
+      .snip pre { margin: 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; display: flex; gap: 10px; min-width: 0; }
+      .snip pre code { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+      .snip .p { color: var(--lime); user-select: none; flex: 0 0 auto; }
+      button.copy { align-self: start; width: 32px; height: 32px; border: 2px solid rgba(243,241,233,.28); background: transparent; color: var(--paper); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+      button.copy:hover { border-color: var(--lime); color: var(--lime); }
+      button.copy svg { width: 15px; height: 15px; }
+      button.copy .check-icon { display: none; }
+      button.copy.copied { border-color: var(--lime); color: var(--lime); }
+      button.copy.copied .copy-icon { display: none; } button.copy.copied .check-icon { display: block; }
+
+      .disc { border: 2px solid var(--ink); margin-top: 16px; }
+      .disc > summary { list-style: none; cursor: pointer; padding: 13px 16px; font-family: var(--mono); font-size: 12.5px; font-weight: 500; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+      .disc > summary::-webkit-details-marker { display: none; }
+      .disc > summary::after { content: "[+]"; color: var(--pink); font-weight: 700; }
+      .disc[open] > summary::after { content: "[−]"; }
+      .disc[open] > summary { border-bottom: 2px solid var(--ink); }
+      .disc .dbody { padding: 16px; }
+      .disc .dbody > p { margin: 0 0 12px; } .disc .dbody > p:first-child { margin-top: 0; }
+      .disc .dbody > p.dsub { font-weight: 700; text-transform: uppercase; font-size: 12px; margin: 22px 0 6px; }
+
+      .grid { display: grid; grid-template-columns: repeat(2, 1fr); border-left: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+      .card { border-right: 2px solid var(--ink); border-top: 2px solid var(--ink); padding: 26px 24px; }
+      .card h4 { margin: 0 0 9px; font-size: 20px; font-weight: 600; text-transform: uppercase; }
+      .card h4::before { content: "→ "; color: var(--pink); }
+      .card p { margin: 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; }
+
+      .err { background: var(--pink); color: var(--ink); font-family: var(--mono); font-size: 13px; font-weight: 500; padding: 14px 16px; white-space: pre-wrap; word-break: break-word; border: 2px solid var(--ink); }
+      .note { border: 2px solid var(--ink); border-left: 8px solid var(--lime); padding: 12px 16px; font-family: var(--mono); font-size: 13px; margin-top: 18px; }
+      .note b { text-transform: uppercase; }
+
+      .foot { background: var(--ink); color: var(--paper); font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; border-bottom: 0; }
+      .foot .pad { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 24px 28px; }
+      .foot a { color: var(--lime); } .foot a:hover { color: var(--paper); }
+
+      @media (max-width: 820px) {
+        .top { padding: 13px 18px; } .nav a { margin-left: 12px; }
+        .pad { padding: 38px 18px; } .hero .pad { padding: 46px 18px; }
+        .grid { grid-template-columns: 1fr; }
+        .card { border-right: 0; }
+        .hero-row { flex-direction: column; align-items: flex-start; }
+        .listbox { min-width: 0; width: 100%; }
+      }
+      @media (max-width: 560px) {
+        .nav a:not(:last-child):not(:first-child) { display: none; }
+        .step { grid-template-columns: 56px 1fr; }
+        .step .sn { font-size: 28px; }
+        .step .sc { padding: 18px 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">◼ XYNE-BOXES</div>
+      <nav class="nav">
+        <a href="#setup">Setup</a>
+        <a href="#use">Create</a>
+        <a href="#box">Box</a>
+        <a href="#certs">Certs</a>
+        <a href="https://github.com/juspay/xyne-boxes">GitHub↗</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="pad">
+        <span class="eyebrow">Incus dev boxes · Tailscale</span>
+        <h1>Spin up<br>a box.<br><span class="out">SSH in.</span></h1>
+        <div class="hero-row">
+          <div>
+            <p class="lead">One command builds a fresh Linux box. Another drops you inside. <b>No keys to copy. Nothing to wire up.</b></p>
+            <div class="cta">
+              <a class="btn btn-p" href="#setup">Get started</a>
+              <a class="btn btn-g" href="https://github.com/juspay/xyne-boxes">View source</a>
+            </div>
+          </div>
+          <div class="listbox">
+            <div class="lh">$ xyne-boxes list</div>
+            <pre>+---------------+---------------------+
+|     NAME      |      LOCATION       |
++---------------+---------------------+
+| <span class="g">mybox</span>         | dev-x86-64-linux-03 |
+| <span class="g">feature-x</span>     | dev-x86-64-linux-08 |
+| scratch       | idliv2-02           |
++---------------+---------------------+</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETUP -->
+    <section id="setup"><div class="pad">
+      <div class="kicker"><span class="n">01</span>SETUP · ONE TIME</div>
+      <h2>Get<br>set up</h2>
+      <p class="sub">A few one-time steps per machine: install Nix, then get on the private Tailscale network.</p>
+      <div class="steps">
+        <div class="step"><div class="sn">1</div><div class="sc">
+          <h3>Install Nix</h3>
+          <p>xyne-boxes runs entirely through Nix, so you need it first. Don't have it yet? Install it in one step with <a class="link" href="https://juspay.github.io/nixone/">nixone</a>.</p>
+        </div></div>
+        <div class="step"><div class="sn">2</div><div class="sc">
+          <h3>Install Tailscale</h3>
+          <p>Grab the app from the <a class="link" href="https://apps.apple.com/ca/app/tailscale/id1475387142?mt=12">Mac App Store</a>. Then check the CLI works — <code>tailscale --help</code> should print something.</p>
+          <details class="disc">
+            <summary><span>Terminal says <code>command not found</code>?</span></summary>
+            <div class="dbody">
+              <p>The app doesn't always add the CLI to your <code>PATH</code>. Paste this once to create a wrapper that points at it:</p>
+              <div class="snip">
+                <pre><span class="p">$</span><code id="cmd-wrapper">mkdir -p /usr/local/bin
+printf '#!/bin/sh\nexec /Applications/Tailscale.app/Contents/MacOS/Tailscale "$@"\n' > /usr/local/bin/tailscale
+chmod +x /usr/local/bin/tailscale</code></pre>
+                <button type="button" class="copy" data-copy="#cmd-wrapper" aria-label="Copy" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                  <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                </button>
+              </div>
+            </div>
+          </details>
+        </div></div>
+        <div class="step"><div class="sn">3</div><div class="sc">
+          <h3>Join the network</h3>
+          <p>Connect your machine to the VPN. A browser window opens for you to sign in.</p>
+          <div class="snip">
+            <pre><span class="p">$</span><code id="cmd-up">sudo tailscale up --login-server=https://headscale.nixos.asia --hostname $(hostname -s)</code></pre>
+            <button type="button" class="copy" data-copy="#cmd-up" aria-label="Copy" title="Copy">
+              <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </button>
+          </div>
+        </div></div>
+      </div>
+    </div></section>
+
+    <!-- CREATE -->
+    <section id="use"><div class="pad">
+      <div class="kicker"><span class="n">02</span>EVERYDAY USE</div>
+      <h2>Create a box<br>&amp; jump in</h2>
+      <p class="sub">This is the whole workflow. Pick a name, and you're inside.</p>
+      <div class="steps">
+        <div class="step"><div class="sn">1</div><div class="sc">
+          <h3>Create it</h3>
+          <p>Pick any name for your box. This builds a fresh Linux container with a ready-to-go dev environment inside.</p>
+          <p>The <b>first time</b> you run it — and roughly once a week after — you'll sign in: the terminal prints a link and a short code. Open <a class="link" href="https://www.google.com/device">google.com/device</a>, enter the code, and sign in with your <b>Juspay Google account</b>. That grants your SSH access — no keys to manage.</p>
+          <div class="snip">
+            <pre><span class="p">$</span><code id="cmd-create">nix run https://github.com/juspay/xyne-boxes/archive/main.zip create &lt;name&gt;</code></pre>
+            <button type="button" class="copy" data-copy="#cmd-create" aria-label="Copy" title="Copy">
+              <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </button>
+          </div>
+        </div></div>
+        <div class="step"><div class="sn">2</div><div class="sc">
+          <h3>Jump in</h3>
+          <p>That's it — this drops you into a shell on the box as the <code>toor</code> user.</p>
+          <div class="snip">
+            <pre><span class="p">$</span><code id="cmd-connect">nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect &lt;name&gt;</code></pre>
+            <button type="button" class="copy" data-copy="#cmd-connect" aria-label="Copy" title="Copy">
+              <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </button>
+          </div>
+          <details class="disc">
+            <summary><span>Prefer to type <code>ssh &lt;name&gt;</code>?</span></summary>
+            <div class="dbody">
+              <p>Do this once and plain <code>ssh &lt;name&gt;</code> works for every box you create.</p>
+              <p class="dsub">1 · Let SSH pick up each box's config</p>
+              <div class="snip">
+                <pre><span class="p">$</span><code id="cmd-include">mkdir -p ~/.ssh
+grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
+  || printf '\nInclude ~/.pu-state/*/ssh_config\n' >> ~/.ssh/config</code></pre>
+                <button type="button" class="copy" data-copy="#cmd-include" aria-label="Copy" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                  <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                </button>
+              </div>
+              <p class="dsub">2 · Forward your key so you don't copy it onto the box</p>
+              <div class="snip">
+                <pre><span class="p">$</span><code id="cmd-agent">eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519</code></pre>
+                <button type="button" class="copy" data-copy="#cmd-agent" aria-label="Copy" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                  <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                </button>
+              </div>
+              <p style="margin-top:14px">Now just run <code>ssh &lt;name&gt;</code> to connect.</p>
+            </div>
+          </details>
+        </div></div>
+      </div>
+    </div></section>
+
+    <!-- WHAT YOU GET -->
+    <section id="box"><div class="pad">
+      <div class="kicker"><span class="n">03</span>INSIDE THE BOX</div>
+      <h2>What<br>you get</h2>
+      <p class="sub">Every box is an <a class="link" href="https://linuxcontainers.org/incus/">Incus</a> container cloned from a loaded <a class="link" href="https://nixos.org">NixOS</a> base image — not a bare machine.</p>
+      <div class="grid" style="margin-top:34px">
+        <div class="card"><h4>Real dev env</h4><p>git, vim, tmux, direnv, starship and more, ready to go. <a class="link" href="https://code.visualstudio.com/docs/remote/ssh">VS Code Remote</a> works out of the box.</p></div>
+        <div class="card"><h4>Warm Nix</h4><p>Flakes are on and the box shares the host's <code>/nix/store</code> — dev shells are fast and common Juspay dev-envs are pre-cached.</p></div>
+        <div class="card"><h4>Persistent</h4><p>You land as <code>toor</code> with your own home. It survives stop/start — gone only when you run <code>destroy</code>.</p></div>
+        <div class="card"><h4>Extras</h4><p><code>list</code> shows your boxes, <code>fork &lt;source&gt; &lt;name&gt;</code> clones one, and <code>destroy &lt;name&gt;</code> removes it.</p></div>
+      </div>
+      <div class="note" style="margin-top:24px"><b>New to Nix?</b> Start at <a class="link" href="https://nixos.asia/en/nix-first">nixos.asia/nix-first</a> to learn how to install packages and work in the environment. Ready for the next step? Set up home-manager with the <a class="link" href="https://github.com/juspay/nixos-unified-template">nixos-unified-template</a>.</div>
+    </div></section>
+
+    <!-- CERTS -->
+    <section id="certs"><div class="pad">
+      <div class="kicker"><span class="n">04</span>GOOD TO KNOW</div>
+      <h2>When access<br>expires</h2>
+      <p class="sub">Your access lasts about a week. When it lapses, reconnecting fails with an error like this:</p>
+      <div style="margin-top:22px;max-width:660px">
+        <div class="err">pu@pu: Permission denied (publickey,keyboard-interactive).
+Connection closed by UNKNOWN port 65535</div>
+        <p style="font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:16px 0">Nothing's broken — just run <code>connect</code> again and sign in the same way you did the first time. About 20 seconds, and you're good for another week.</p>
+        <div class="snip">
+          <pre><span class="p">$</span><code id="cmd-renew">nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect</code></pre>
+          <button type="button" class="copy" data-copy="#cmd-renew" aria-label="Copy" title="Copy">
+            <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+          </button>
+        </div>
+        <div class="note"><b>Seeing a GitHub 403 error?</b> Turn the VPN off and try again. If it keeps happening, set up a GitHub token for a higher rate limit.</div>
+        <div class="note" style="border-left-color:var(--pink);margin-top:14px"><b>Need help?</b> Join <code>#xyne-boxes-feedback</code> on Xyne Spaces.</div>
+      </div>
+    </div></section>
+
+    <footer class="foot"><div class="pad">
+      <span>JUSPAY · XYNE-BOXES</span>
+      <span style="text-transform:none">Support · <b style="color:var(--lime);font-weight:500">#xyne-boxes-feedback</b> on Xyne Spaces</span>
+      <a href="https://github.com/juspay/xyne-boxes">Source on GitHub →</a>
+    </div></footer>
+
+    <script>
+      for (const button of document.querySelectorAll("[data-copy]")) {
+        button.addEventListener("click", async () => {
+          const target = document.querySelector(button.dataset.copy);
+          if (!target) return;
+          await navigator.clipboard.writeText(target.textContent.trim());
+          const originalLabel = button.getAttribute("aria-label");
+          const originalTitle = button.getAttribute("title");
+          button.classList.add("copied");
+          button.setAttribute("aria-label", "Copied");
+          button.setAttribute("title", "Copied");
+          setTimeout(() => {
+            button.classList.remove("copied");
+            button.setAttribute("aria-label", originalLabel);
+            button.setAttribute("title", originalTitle);
+          }, 1200);
+        });
+      }
+    </script>
+  </body>
+</html>

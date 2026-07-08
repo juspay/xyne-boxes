@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="xyne-boxes — spin up a box, SSH in">
+  <rect width="1200" height="630" fill="#0c0c0c"/>
+
+  <!-- brand bar -->
+  <text x="64" y="82" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="20" font-weight="700" letter-spacing="1" fill="#f3f1e9">&#9642; XYNE-BOXES</text>
+  <rect x="64" y="98" width="1072" height="3" fill="#f3f1e9"/>
+
+  <!-- eyebrow tag -->
+  <rect x="64" y="150" width="392" height="34" fill="#c7f501"/>
+  <text x="80" y="173" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="16" font-weight="700" letter-spacing="1" fill="#0c0c0c">INCUS DEV BOXES · TAILSCALE</text>
+
+  <!-- headline -->
+  <text x="60" y="330" font-family="'Space Grotesk', system-ui, sans-serif" font-size="150" font-weight="700" letter-spacing="-6" fill="#f3f1e9">SPIN UP A BOX.</text>
+  <text x="60" y="470" font-family="'Space Grotesk', system-ui, sans-serif" font-size="150" font-weight="700" letter-spacing="-6" fill="none" stroke="#f3f1e9" stroke-width="2">SSH IN.</text>
+
+  <!-- footer -->
+  <rect x="64" y="536" width="1072" height="3" fill="#f3f1e9"/>
+  <text x="64" y="580" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="16" letter-spacing="2" fill="#8f8d84">JUSPAY · XYNE-BOXES</text>
+  <text x="1136" y="580" text-anchor="end" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace" font-size="16" letter-spacing="1" fill="#c7f501">github.com/juspay/xyne-boxes</text>
+</svg>
