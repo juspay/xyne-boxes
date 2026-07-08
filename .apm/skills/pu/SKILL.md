@@ -29,7 +29,7 @@ pu connect "$host" -- CMD  # run CMD on the box and return
 pu destroy "$host"         # tear down — always do this when finished
 ```
 
-Name is positional. Pick a descriptive, collision-free name (e.g. `app-pr-42-evidence`).
+Name is required and positional. Pick a descriptive, collision-free name (e.g. `app-pr-42-evidence`).
 
 `pu connect` is the reliable way in — it reads `~/.pu-state/$host/ssh_config` itself, so it
 needs no setup. Bare `ssh "$host"` works **only** if you've added `Include

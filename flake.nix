@@ -15,7 +15,6 @@
           default = pkgs.writeShellApplication {
             name = "pu";
             runtimeInputs = with pkgs; [
-              gawk
               openssh
               step-cli
             ];
