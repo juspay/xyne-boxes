@@ -237,7 +237,16 @@ chmod +x /usr/local/bin/tailscale</code></pre>
         </div></div>
         <div class="step"><div class="sn">2</div><div class="sc">
           <h3>Jump in</h3>
-          <p>That's it — this drops you into a shell on the box as the <code>toor</code> user.</p>
+          <p>Load your SSH key into the agent so it can be forwarded into the box.</p>
+          <div class="snip">
+            <pre><span class="p">$</span><code id="cmd-agent">eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519</code></pre>
+            <button type="button" class="copy" data-copy="#cmd-agent" aria-label="Copy" title="Copy">
+              <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </button>
+          </div>
+          <p>Then connect. This drops you into a shell on the box as the <code>toor</code> user.</p>
           <div class="snip">
             <pre><span class="p">$</span><code id="cmd-connect">nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect &lt;name&gt;</code></pre>
             <button type="button" class="copy" data-copy="#cmd-connect" aria-label="Copy" title="Copy">
@@ -249,21 +258,12 @@ chmod +x /usr/local/bin/tailscale</code></pre>
             <summary><span>Prefer to type <code>ssh &lt;name&gt;</code>?</span></summary>
             <div class="dbody">
               <p>Do this once and plain <code>ssh &lt;name&gt;</code> works for every box you create.</p>
-              <p class="dsub">1 · Let SSH pick up each box's config</p>
+              <p class="dsub">Let SSH pick up each box's config</p>
               <div class="snip">
                 <pre><span class="p">$</span><code id="cmd-include">mkdir -p ~/.ssh
 grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
   || printf '\nInclude ~/.pu-state/*/ssh_config\n' >> ~/.ssh/config</code></pre>
                 <button type="button" class="copy" data-copy="#cmd-include" aria-label="Copy" title="Copy">
-                  <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                  <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-                </button>
-              </div>
-              <p class="dsub">2 · Forward your key so you don't copy it onto the box</p>
-              <div class="snip">
-                <pre><span class="p">$</span><code id="cmd-agent">eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519</code></pre>
-                <button type="button" class="copy" data-copy="#cmd-agent" aria-label="Copy" title="Copy">
                   <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                   <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                 </button>
