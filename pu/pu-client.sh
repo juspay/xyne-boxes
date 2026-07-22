@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PU_STATE_DIR="${PU_STATE_DIR:-$HOME/.pu-state}"
+mkdir -p "$PU_STATE_DIR"
+
+# Per-user config sourced BEFORE we read env defaults. Lets a user pin
+# PU_HOST / PU_SOCKS_PROXY / etc. once for all shells instead of exporting
+# them per-session or editing each ~/.pu-state/<name>/ssh_config by hand.
+#
+# Example ~/.pu-state/env for a staging setup that reaches pu-manager
+# through a SOCKS tunnel on the local box:
+#   PU_HOST=10.10.68.56
+#   PU_SOCKS_PROXY=127.0.0.1:1080
+#
+# The same file is sourced by ~/.pu-state/bin/pu-proxy so `ssh <container>`,
+# `scp`, VS Code Remote-SSH etc. all pick up the same config without any
+# manual edits to per-container ssh_configs.
+if [ -f "$PU_STATE_DIR/env" ]; then
+  # shellcheck disable=SC1091 # sourced at runtime
+  . "$PU_STATE_DIR/env"
+fi
+
 PU_HOST="${PU_HOST:-pu}"
 PU_ADMIN="${PU_ADMIN:-toor}"
 PU_USE_SSH_CA="${PU_USE_SSH_CA:-true}"
@@ -8,9 +28,6 @@ STEP_FINGERPRINT="${STEP_FINGERPRINT:-76bb5cab2458b5331221da3cc6754102189a03184d
 STEP_CA_URL="${STEP_CA_URL:-https://${PU_HOST}:8443}"
 CLI_NAME="${0##*/}"
 export STEP_FINGERPRINT STEP_CA_URL
-
-PU_STATE_DIR="${PU_STATE_DIR:-$HOME/.pu-state}"
-mkdir -p "$PU_STATE_DIR"
 
 require_step_cli() {
   if [ "${PU_USE_SSH_CA:-}" = "true" ] && ! command -v step >/dev/null 2>&1; then
@@ -89,8 +106,16 @@ write_proxy_script() {
 # support tickets carry a stable machine-readable identifier.
 
 name="$1"
-: "${PU_HOST:=pu}"
 : "${PU_STATE_DIR:=$HOME/.pu-state}"
+
+# Optional per-user config, sourced BEFORE defaults. Set PU_HOST /
+# PU_SOCKS_PROXY / PU_USE_SSH_CA here once and every ssh/scp/VS-Code
+# session picks them up — no per-container ssh_config edits.
+if [ -f "$PU_STATE_DIR/env" ]; then
+  . "$PU_STATE_DIR/env"
+fi
+
+: "${PU_HOST:=pu}"
 : "${PU_USE_SSH_CA:=true}"
 
 msg() {
@@ -127,7 +152,25 @@ if [ "$PU_USE_SSH_CA" = "true" ]; then
 fi
 
 # --- delegate: ssh -T pu@$PU_HOST "connect $name" ---
+# Optional: PU_SOCKS_PROXY=host:port routes the ssh via a SOCKS5 tunnel
+# (typical for staging where $PU_HOST is only reachable via a jump box's
+# SOCKS proxy). Prefers ncat (nicer errors) then nc -X 5.
 _MACS="hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
+
+# Build the SOCKS `-o ProxyCommand=…` arg into $1 $2 (via `set --`) so
+# the whole ProxyCommand string stays a single argv element — direct
+# `$var`-splicing broke it up on whitespace and turned `nc` into a
+# no-arg invocation that just printed its usage.
+if [ -n "${PU_SOCKS_PROXY:-}" ]; then
+  if command -v ncat >/dev/null 2>&1; then
+    set -- -o "ProxyCommand=ncat --proxy-type socks5 --proxy $PU_SOCKS_PROXY %h %p"
+  else
+    set -- -o "ProxyCommand=nc -X 5 -x $PU_SOCKS_PROXY %h %p"
+  fi
+else
+  set --
+fi
+
 if [ "$PU_USE_SSH_CA" = "true" ]; then
   ssh -T \
     -o "MACs=$_MACS" \
@@ -136,11 +179,13 @@ if [ "$PU_USE_SSH_CA" = "true" ]; then
     -o IdentitiesOnly=yes \
     -o "UserKnownHostsFile=$PU_STATE_DIR/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
+    "$@" \
     "pu@${PU_HOST}" "connect $name"
 else
   ssh -T \
     -o "MACs=$_MACS" \
     -o StrictHostKeyChecking=no \
+    "$@" \
     "pu@${PU_HOST}" "connect $name"
 fi
 rc=$?
