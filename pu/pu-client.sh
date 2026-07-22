@@ -64,9 +64,45 @@ pu_ssh() {
   ssh -nT "${_pu_ssh_opts[@]}" "pu@${PU_HOST}" "$@"
 }
 
+write_ssh_proxy() {
+  local path="$PU_STATE_DIR/ssh-proxy" tmp
+  tmp=$(mktemp "$PU_STATE_DIR/.ssh-proxy.XXXXXX")
+
+  cat > "$tmp" <<'EOF'
+#!/usr/bin/env bash
+
+name="$1"
+shift
+
+"$@" 2> >(
+  reported_auth_failure=false
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *"Permission denied"*)
+        if [ "$reported_auth_failure" = false ]; then
+          reported_auth_failure=true
+          cat >&2 <<MESSAGE
+xyne-boxes: SSH authentication failed. Your certificate may have expired.
+
+Renew it by running:
+  nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect $name
+MESSAGE
+        fi
+        ;;
+      *) printf '%s\n' "$line" >&2 ;;
+    esac
+  done
+)
+EOF
+  chmod 700 "$tmp"
+  mv -f "$tmp" "$path"
+  printf '%s\n' "$path"
+}
+
 pu_proxy_command() {
-  local name="$1" proxy_cmd
-  local proxy_args=(ssh -T "${_pu_ssh_opts[@]}" "pu@${PU_HOST}" "connect $name")
+  local name="$1" proxy_cmd proxy
+  proxy=$(write_ssh_proxy)
+  local proxy_args=("$proxy" "$name" ssh -o BatchMode=yes -T "${_pu_ssh_opts[@]}" "pu@${PU_HOST}" "connect $name")
   printf -v proxy_cmd '%q ' "${proxy_args[@]}"
   printf '%s\n' "${proxy_cmd% }"
 }
@@ -75,8 +111,6 @@ write_ssh_config() {
   local name="$1"
   local dir="$PU_STATE_DIR/$name"
   mkdir -p "$dir"
-
-  client_auth_init
 
   local proxy_cmd
   proxy_cmd=$(pu_proxy_command "$name")
@@ -155,6 +189,7 @@ pu_connect() {
   done
 
   client_auth_init
+  write_ssh_config "$name"
 
   local proxy_cmd
   proxy_cmd=$(pu_proxy_command "$name")
