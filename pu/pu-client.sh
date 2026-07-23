@@ -12,12 +12,7 @@ STEP_CA_URL="${STEP_CA_URL:-https://${PU_HOST}:8443}"
 CLI_NAME="${0##*/}"
 export STEP_FINGERPRINT STEP_CA_URL
 
-# pu_err — same shape as pu-manager's `pu_err` and pu-proxy's `msg`:
-# `pu: <first> [state=<code>]` on stderr, secondary lines indented.
-# Kept in the outer script (not the pu-proxy heredoc) so `pu_ssh` and
-# `pu_connect` can surface a typed message when their outer ssh dies
-# with rc=255 — the CLI otherwise leaks raw `ssh: connect to host …`
-# lines with no `[state=…]`, which support tickets can't grep by.
+# Emit `pu: <first> [state=<code>]` on stderr + indented secondary lines.
 pu_err() {
   local code="$1"; shift
   local first="$1"; shift
@@ -28,8 +23,6 @@ pu_err() {
   done
 }
 
-# Emit the same connect-failed message pu-proxy uses. Called from
-# pu_ssh and pu_connect on rc=255 (SSH transport failure).
 _pu_emit_connect_failed() {
   pu_err connect-failed \
     "cannot reach pu-manager (ssh exit 255)." \
@@ -90,43 +83,24 @@ client_auth_init() {
   migrate_old_ssh_configs
 }
 
-# write_proxy_script — emit $PU_STATE_DIR/bin/pu-proxy from an embedded
-# POSIX-sh template. Refreshed on every client_auth_init so upgrading the
-# client automatically upgrades the ProxyCommand behaviour for every
-# existing per-container ssh_config.
-#
-# Why indirection: `~/.pu-state/<name>/ssh_config` files persist across
-# pu upgrades. If they baked the ProxyCommand inline, we'd have to
-# rewrite every one to change behaviour. Instead they point at a stable
-# path here; we own the script content.
+# Emit pu-proxy at ~/.pu-state/bin. Refreshed each client_auth_init so
+# upgrades take effect without rewriting every per-container ssh_config.
 write_proxy_script() {
   local dir="$PU_STATE_DIR/bin"
   local script="$dir/pu-proxy"
   mkdir -p "$dir"
   cat > "$script" <<'PROXY_EOF'
 #!/bin/sh
-# pu-proxy: cert pre-flight + SSH delegation. Emitted by pu-client on
-# every client_auth_init. Source lives in project-unknown's pu-client.sh
-# under write_proxy_script — DO NOT hand-edit this file.
-#
-# ProxyCommand target: `<pu-proxy> <container-name>`.
-# Everything user-facing goes to stderr with a `[state=<code>]` suffix so
-# support tickets carry a stable machine-readable identifier.
+# pu-proxy: cert pre-flight + ssh delegation. Emitted by pu-client's
+# write_proxy_script; do not hand-edit.
 
 name="$1"
 : "${PU_STATE_DIR:=$HOME/.pu-state}"
 
-# PU_HOST / PU_USE_SSH_CA / PU_SOCKS_PROXY are expected to come from the
-# calling shell's env — baked into the ssh_config's ProxyCommand as an
-# `env PU_HOST=… PU_USE_SSH_CA=… [PU_SOCKS_PROXY=…] …` prefix at
-# `pu create` time. Callers can also override via an `export` in shell rc.
-# No separate config file — the env prefix in each container's ssh_config
-# IS the config.
+# PU_HOST / PU_USE_SSH_CA baked into ProxyCommand as `env … pu-proxy $name`.
 : "${PU_HOST:=pu}"
 : "${PU_USE_SSH_CA:=true}"
 
-# Client-invocation prefix used in remediation hints. Single-sourced so
-# the URL/branch/command shape can move without editing every message.
 readonly XYNE_BOXES_CLI="nix run https://github.com/juspay/xyne-boxes/archive/main.zip --"
 
 msg() {
@@ -138,7 +112,7 @@ msg() {
   done
 }
 
-# --- pre-flight: cert presence + expiry (only when SSH CA is in use) ---
+# Cert pre-flight (SSH CA mode only).
 if [ "$PU_USE_SSH_CA" = "true" ]; then
   CERT="$PU_STATE_DIR/key-cert.pub"
   if [ ! -f "$CERT" ]; then
@@ -147,11 +121,10 @@ if [ "$PU_USE_SSH_CA" = "true" ]; then
       "Run '$XYNE_BOXES_CLI list' once to create one (opens a browser sign-in)."
     exit 1
   fi
-  # Cross-platform expiry check via ssh-keygen (OpenSSH built-in on macOS + Linux).
   valid_to=$(ssh-keygen -L -f "$CERT" 2>/dev/null | awk '/Valid: from/ {print $NF}')
   if [ -n "$valid_to" ] && [ "$valid_to" != "forever" ]; then
     now=$(date -u +%Y-%m-%dT%H:%M:%S)
-    # ISO 8601 → lex compare works on POSIX test.
+    # ISO 8601 → POSIX lex compare.
     if [ "$now" \> "$valid_to" ]; then
       msg cert-expired \
         "your SSH certificate expired at $valid_to." \
@@ -162,25 +135,7 @@ if [ "$PU_USE_SSH_CA" = "true" ]; then
   fi
 fi
 
-# --- delegate: ssh -T pu@$PU_HOST "connect $name" ---
-# Optional: PU_SOCKS_PROXY=host:port routes the ssh via a SOCKS5 tunnel
-# (typical for staging where $PU_HOST is only reachable via a jump box's
-# SOCKS proxy). Prefers ncat (nicer errors) then nc -X 5.
 _MACS="hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
-
-# Build the SOCKS `-o ProxyCommand=…` arg into $1 $2 (via `set --`) so
-# the whole ProxyCommand string stays a single argv element — direct
-# `$var`-splicing broke it up on whitespace and turned `nc` into a
-# no-arg invocation that just printed its usage.
-if [ -n "${PU_SOCKS_PROXY:-}" ]; then
-  if command -v ncat >/dev/null 2>&1; then
-    set -- -o "ProxyCommand=ncat --proxy-type socks5 --proxy $PU_SOCKS_PROXY %h %p"
-  else
-    set -- -o "ProxyCommand=nc -X 5 -x $PU_SOCKS_PROXY %h %p"
-  fi
-else
-  set --
-fi
 
 if [ "$PU_USE_SSH_CA" = "true" ]; then
   ssh -T \
@@ -190,21 +145,16 @@ if [ "$PU_USE_SSH_CA" = "true" ]; then
     -o IdentitiesOnly=yes \
     -o "UserKnownHostsFile=$PU_STATE_DIR/known_hosts" \
     -o StrictHostKeyChecking=accept-new \
-    "$@" \
     "pu@${PU_HOST}" "connect $name"
 else
   ssh -T \
     -o "MACs=$_MACS" \
     -o StrictHostKeyChecking=no \
-    "$@" \
     "pu@${PU_HOST}" "connect $name"
 fi
 rc=$?
 
-# rc == 255 is SSH's own signal for a transport/auth failure (network,
-# DNS, unreachable host, auth denied). Anything else means the server
-# ran and exited with that code — its own `pu: … [state=…]` message is
-# already on the wire. Don't double up.
+# Only wrap true SSH transport failure — server errors already carry [state=…].
 if [ "$rc" -eq 255 ]; then
   msg connect-failed \
     "cannot reach pu-manager (ssh exit 255)." \
@@ -216,21 +166,17 @@ PROXY_EOF
   chmod 0755 "$script"
 }
 
-# migrate_old_ssh_configs — rewrite any per-container ssh_config whose
-# ProxyCommand still bakes the old inline `ssh -T … pu@… connect NAME`
-# form. Idempotent, safe to run every client_auth_init. Silent on
-# already-migrated configs.
+# Rewrite legacy per-container ssh_config with inline ssh ProxyCommand
+# to the pu-proxy indirection. Idempotent.
 migrate_old_ssh_configs() {
   local cfg name
   [ -d "$PU_STATE_DIR" ] || return 0
   local proxy="$PU_STATE_DIR/bin/pu-proxy"
   for cfg in "$PU_STATE_DIR"/*/ssh_config; do
     [ -f "$cfg" ] || continue
-    # Skip if already migrated (uses pu-proxy indirection).
     if grep -q "ProxyCommand.*pu-proxy" "$cfg" 2>/dev/null; then
       continue
     fi
-    # Skip if not old-style (no ProxyCommand line at all).
     if ! grep -q '^  ProxyCommand ssh' "$cfg" 2>/dev/null; then
       continue
     fi
@@ -249,8 +195,6 @@ pu_ssh() {
   return "$rc"
 }
 
-# Retained for callers (pu connect) that need the ProxyCommand as a
-# string; now delegates to the pu-proxy script, no inline ssh.
 pu_proxy_command() {
   local name="$1" proxy_cmd
   proxy_cmd=$(printf '%q %q' "$PU_STATE_DIR/bin/pu-proxy" "$name")
@@ -262,25 +206,10 @@ write_ssh_config() {
   local dir="$PU_STATE_DIR/$name"
   mkdir -p "$dir"
 
-  # No internal client_auth_init here — every caller (pu_launch,
-  # pu_connect) already invokes it earlier. Kept explicit to sidestep
-  # the recursion pu_launch → write_ssh_config → client_auth_init.
-
-  # Bake the CURRENT shell's PU_HOST + PU_USE_SSH_CA (+ PU_SOCKS_PROXY
-  # if set) into the ProxyCommand as an `env` prefix. Restores the
-  # pre-pu-proxy behaviour where the ssh_config remembered which
-  # pu-manager the container was created against, so `ssh <container>`
-  # from ANY future shell reaches the right server with no per-shell
-  # env dance.
-  #
-  # Precedence: calling shell's exported env wins (because `env FOO=…`
-  # can be overridden by explicit shell exports), then this env prefix,
-  # then pu-proxy's built-in defaults.
+  # Bake current shell's PU_HOST + PU_USE_SSH_CA into ProxyCommand so
+  # `ssh <container>` from any future shell reaches the right server.
   local env_prefix
   env_prefix="env PU_HOST=$(printf '%q' "$PU_HOST") PU_USE_SSH_CA=$(printf '%q' "${PU_USE_SSH_CA:-true}")"
-  if [ -n "${PU_SOCKS_PROXY:-}" ]; then
-    env_prefix="$env_prefix PU_SOCKS_PROXY=$(printf '%q' "$PU_SOCKS_PROXY")"
-  fi
 
   {
     echo "Host $name"
@@ -361,15 +290,12 @@ pu_connect() {
   local proxy_cmd
   proxy_cmd=$(pu_proxy_command "$name")
 
-  # bash 3.2 (default on macOS) errors on empty "${arr[@]}" under `set -u`.
-  # Guard with ${arr[@]+"${arr[@]}"} so each array expands to nothing when empty.
-  # Not `exec` — we need to inspect the rc so the CLI can emit a typed
-  # connect-failed message when the outer ssh fails at the transport
-  # layer (rc=255). pu-proxy already handles the inner-ssh case; this
-  # covers only the outer ssh's own dial to the container hostname
-  # (e.g. sshd dead on the jump/target).
-  local rc=0
-  ssh \
+  # ${arr[@]+"${arr[@]}"} keeps `set -u` + empty arrays safe on bash 3.2 (macOS).
+  # Don't wrap rc=255 here: with ProxyCommand=pu-proxy, outer ssh returns
+  # 255 whenever pu-proxy exits non-zero (including server errors like
+  # [state=absent]/[state=api-down]). pu-proxy already emits the correct
+  # [state=…] on stderr; wrapping again just duplicates the message.
+  exec ssh \
     ${_pu_instance_ssh_opts[@]+"${_pu_instance_ssh_opts[@]}"} \
     ${ssh_args[@]+"${ssh_args[@]}"} \
     -o "ProxyCommand=$proxy_cmd" \
@@ -378,10 +304,7 @@ pu_connect() {
     -o UserKnownHostsFile=/dev/null \
     -l "$PU_ADMIN" \
     -- "$name" \
-    ${remote_cmd[@]+"${remote_cmd[@]}"} \
-    || rc=$?
-  [ "$rc" -eq 255 ] && _pu_emit_connect_failed
-  exit "$rc"
+    ${remote_cmd[@]+"${remote_cmd[@]}"}
 }
 
 pu_destroy() {
