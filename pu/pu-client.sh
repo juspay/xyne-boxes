@@ -189,9 +189,16 @@ migrate_old_ssh_configs() {
 }
 
 pu_ssh() {
-  local rc=0
+  local rc=0 interrupted=0
+  trap 'interrupted=1' INT
   ssh -nT "${_pu_ssh_opts[@]}" "pu@${PU_HOST}" "$@" || rc=$?
-  [ "$rc" -eq 255 ] && _pu_emit_connect_failed
+  trap - INT
+  # Suppress the connect-failed wrap on Ctrl-C: ssh returns 255 when
+  # interrupted mid-handshake, indistinguishable from real transport
+  # failure by rc alone.
+  if [ "$rc" -eq 255 ] && [ "$interrupted" -eq 0 ]; then
+    _pu_emit_connect_failed
+  fi
   return "$rc"
 }
 
