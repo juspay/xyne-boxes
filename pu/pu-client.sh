@@ -24,9 +24,20 @@ pu_err() {
 }
 
 _pu_emit_connect_failed() {
+  # Skip the wrap if PU_HOST:22 is actually reachable — rc=255 then means
+  # auth / host-key / cert issue, and ssh's own stderr already explains.
+  # `nc -w` doesn't bound connect() on BSD; wrap with timeout(1)/gtimeout.
+  local tmo=""
+  if   command -v timeout  >/dev/null 2>&1; then tmo=timeout
+  elif command -v gtimeout >/dev/null 2>&1; then tmo=gtimeout
+  fi
+  if [ -n "$tmo" ] && command -v nc >/dev/null 2>&1 \
+     && $tmo 2 nc -z "$PU_HOST" 22 >/dev/null 2>&1; then
+    return 0
+  fi
   pu_err connect-failed \
-    "cannot reach pu-manager (ssh exit 255)." \
-    "Check DNS / VPN reachability to \$PU_HOST, and that your SSH cert is fresh." \
+    "cannot reach pu-manager at \$PU_HOST:22." \
+    "Check DNS / VPN reachability." \
     "If it persists, check with an admin or post in #xyne-boxes-feedback."
 }
 
@@ -154,12 +165,23 @@ else
 fi
 rc=$?
 
-# Only wrap true SSH transport failure — server errors already carry [state=…].
+# Only wrap when PU_HOST:22 truly can't be reached. BSD nc's -w bounds
+# reads not connect(), so wrap with timeout — otherwise the probe itself
+# hangs for the OS's TCP retry window (minutes on macOS).
 if [ "$rc" -eq 255 ]; then
-  msg connect-failed \
-    "cannot reach pu-manager (ssh exit 255)." \
-    "Check DNS / VPN reachability to \$PU_HOST, and that your SSH cert is fresh." \
-    "If it persists, check with an admin or post in #xyne-boxes-feedback."
+  _tmo=""
+  if   command -v timeout  >/dev/null 2>&1; then _tmo=timeout
+  elif command -v gtimeout >/dev/null 2>&1; then _tmo=gtimeout
+  fi
+  if [ -n "$_tmo" ] && command -v nc >/dev/null 2>&1 \
+     && $_tmo 2 nc -z "$PU_HOST" 22 >/dev/null 2>&1; then
+    :  # port open — ssh's own stderr already explains the failure
+  else
+    msg connect-failed \
+      "cannot reach pu-manager at \$PU_HOST:22." \
+      "Check DNS / VPN reachability." \
+      "If it persists, check with an admin or post in #xyne-boxes-feedback."
+  fi
 fi
 exit "$rc"
 PROXY_EOF
