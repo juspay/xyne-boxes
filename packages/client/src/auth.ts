@@ -2,7 +2,7 @@ import { Effect, FileSystem } from "effect"
 import type { PlatformError } from "effect/PlatformError"
 import { type ResolvedConfig, identityPaths, MAC_OPT } from "./config.ts"
 import { AuthError, CommandFailed, MissingTool } from "./errors.ts"
-import { runExitCode, runOk, type ProcessReq } from "./process.ts"
+import { lastProcessLine, runCaptured, runExitCode, type ProcessReq } from "./process.ts"
 import { resolveStep } from "./tools.ts"
 
 export interface AuthHooks {
@@ -72,7 +72,20 @@ export const ensureAuth = (
     const env = stepEnv(config)
 
     if (!(yield* fs.exists(paths.key))) {
-      yield* runOk("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-f", paths.key])
+      const generated = yield* runCaptured("ssh-keygen", [
+        "-q",
+        "-t",
+        "ed25519",
+        "-N",
+        "",
+        "-f",
+        paths.key,
+      ])
+      if (generated.exitCode !== 0) {
+        return yield* new AuthError({
+          message: lastProcessLine(generated) || "ssh-keygen failed",
+        })
+      }
     }
 
     const healthy = yield* runExitCode(step, ["ca", "health"], {
@@ -81,7 +94,14 @@ export const ensureAuth = (
       stderr: "ignore",
     }).pipe(Effect.orElseSucceed(() => 1))
     if (healthy !== 0) {
-      yield* runOk(step, ["ca", "bootstrap", "--force"], { env })
+      const bootstrapped = yield* runCaptured(step, ["ca", "bootstrap", "--force"], { env })
+      if (bootstrapped.exitCode !== 0) {
+        const detail = lastProcessLine(bootstrapped)
+        return yield* new AuthError({
+          message: detail || "Could not reach the certificate authority.",
+          hint: `Is ${config.host} reachable? Join the Juspay Tailscale/headscale network, then retry.`,
+        })
+      }
     }
 
     const certOk = yield* fs.exists(paths.cert)

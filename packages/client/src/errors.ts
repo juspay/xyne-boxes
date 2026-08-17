@@ -13,6 +13,7 @@ export class CommandFailed extends Data.TaggedError("CommandFailed")<{
   readonly command: string
   readonly args: ReadonlyArray<string>
   readonly exitCode: number
+  readonly stderr?: string
 }> {}
 
 export class AuthError extends Data.TaggedError("AuthError")<{

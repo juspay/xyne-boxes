@@ -221,9 +221,8 @@ export function printError(error: unknown): number {
     return 1
   }
   if (error instanceof CommandFailed) {
-    const argv = [error.command, ...error.args].join(" ")
-    printErr(t`${err("✗")} ${ink("Command failed")}  ${muted(`exit ${error.exitCode}`)}`)
-    printErr(t`  ${otDim(argv)}`)
+    const detail = error.stderr?.trim().split(/\r?\n/).filter((line) => line.trim() !== "").at(-1)
+    printErr(t`${err("✗")} ${ink(detail ?? "Command failed")}  ${muted(`exit ${error.exitCode}`)}`)
     if (error.command === "ssh") {
       printErr(
         t`  ${muted("If this is a certificate expiry, run")} ${gold("connect")} ${muted("and sign in again.")}`,
