@@ -23,15 +23,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
       :root {
-        color-scheme: light;
-        --bg: #fff;
-        --fg: #0b0b0b;
-        --rail: #0b0b0b;
-        --rail-fg: #f4f4f4;
-        --muted: #2a2a2a;
-        --rule: #0b0b0b;
-        --wash: #efefef;
-        --blue: #0b57d0;
+        color-scheme: dark;
+        --bg: #0e1628;
+        --fg: #f3ead8;
+        --rail: #0a1020;
+        --rail-fg: #f3ead8;
+        --muted: #c9bda6;
+        --rule: #3d4d6e;
+        --wash: #162038;
+        --accent: #e8a317;
+        --ink: #070b14;
         --sans: "IBM Plex Sans", system-ui, sans-serif;
         --serif: "Newsreader", "Times New Roman", serif;
         --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -48,20 +49,20 @@
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
       }
-      a { color: var(--blue); }
-      a:hover { color: #083ea0; }
-      :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+      a { color: var(--accent); }
+      a:hover { color: #ffc44d; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       :not(pre) > code {
         font-family: var(--mono);
         font-size: .82em;
-        background: var(--fg);
-        color: #fff;
+        background: var(--ink);
+        color: var(--fg);
         padding: .12em .4em;
       }
 
       .skip {
         position: absolute; left: 12px; top: -40px; z-index: 50;
-        background: var(--blue); color: #fff; padding: 8px 12px;
+        background: var(--accent); color: var(--ink); padding: 8px 12px;
         font-family: var(--mono); font-size: 12px; text-decoration: none;
       }
       .skip:focus { top: 12px; }
@@ -77,7 +78,7 @@
         display: flex; flex-direction: column; gap: 28px;
       }
       .brand {
-        text-decoration: none; color: #fff;
+        text-decoration: none; color: var(--fg);
         font-family: var(--serif);
         font-size: 28px; font-weight: 600; letter-spacing: -.03em;
         line-height: 1;
@@ -85,25 +86,25 @@
       .brand small {
         display: block; margin-top: 8px;
         font-family: var(--mono); font-size: 11px; font-weight: 400;
-        letter-spacing: .04em; color: #bdbdbd;
+        letter-spacing: .04em; color: var(--muted);
       }
       .rail nav { display: flex; flex-direction: column; gap: 2px; }
       .rail nav a {
-        color: #cfcfcf; text-decoration: none;
+        color: var(--muted); text-decoration: none;
         font-family: var(--mono); font-size: 13px;
         padding: 8px 10px; border-left: 2px solid transparent;
       }
-      .rail nav a:hover { color: #fff; border-left-color: #fff; }
+      .rail nav a:hover { color: var(--accent); border-left-color: var(--accent); }
       .rail-foot {
         margin-top: auto;
-        font-family: var(--mono); font-size: 12px; color: #bdbdbd;
+        font-family: var(--mono); font-size: 12px; color: var(--muted);
         display: flex; flex-direction: column; gap: 8px;
       }
-      .rail-foot a { color: #fff; }
+      .rail-foot a { color: var(--accent); }
 
       .page { padding: 48px 64px 80px; max-width: 920px; }
 
-      .mast { padding-bottom: 36px; border-bottom: 2px solid var(--rule); margin-bottom: 48px; }
+      .mast { padding-bottom: 36px; border-bottom: 2px solid var(--accent); margin-bottom: 48px; }
       .mast p.meta {
         font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
         text-transform: uppercase; margin: 0 0 12px; color: var(--muted);
@@ -118,26 +119,26 @@
 
       .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       .run {
-        background: var(--fg); color: #fff;
+        background: var(--ink); color: var(--fg);
         padding: 14px 14px 14px 16px;
         display: grid; grid-template-columns: 1fr auto; gap: 10px;
         align-items: start;
       }
       .run .lbl {
         font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
-        text-transform: uppercase; color: #bdbdbd; margin-bottom: 6px;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
       }
       .run pre {
         margin: 0; font-family: var(--mono); font-size: 13.5px; line-height: 1.55;
         white-space: pre-wrap; overflow-wrap: anywhere;
       }
-      .run .acc { color: #9ec1ff; }
+      .run .acc { color: var(--accent); }
 
-      article { padding: 8px 0 44px; border-bottom: 1px solid #d4d4d4; }
+      article { padding: 8px 0 44px; border-bottom: 1px solid var(--rule); }
       article:last-of-type { border-bottom: 0; }
       .label {
         font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-        text-transform: uppercase; margin: 0 0 8px;
+        text-transform: uppercase; margin: 0 0 8px; color: var(--accent);
       }
       h2 {
         font-family: var(--serif);
@@ -153,12 +154,12 @@
         grid-template-columns: 56px 1fr;
         gap: 18px;
         padding: 20px 0;
-        border-top: 1px solid #d4d4d4;
+        border-top: 1px solid var(--rule);
       }
-      .row:first-child { border-top: 2px solid var(--rule); }
+      .row:first-child { border-top: 2px solid var(--accent); }
       .n {
         font-family: var(--serif); font-size: 28px; font-weight: 600;
-        line-height: 1; padding-top: 2px;
+        line-height: 1; padding-top: 2px; color: var(--accent);
       }
       .row h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
       .row p { margin: 0 0 12px; }
@@ -167,7 +168,7 @@
       .snip {
         display: grid; grid-template-columns: minmax(0,1fr) auto;
         gap: 10px; align-items: start;
-        background: var(--fg); color: #fff;
+        background: var(--ink); color: var(--fg);
         padding: 12px 12px 12px 14px; margin: 4px 0 12px;
       }
       .snip:last-child { margin-bottom: 0; }
@@ -176,14 +177,14 @@
         display: flex; gap: 10px; min-width: 0;
       }
       .snip pre code { background: none; color: inherit; padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-      .snip .p { color: #9ec1ff; user-select: none; flex: 0 0 auto; }
+      .snip .p { color: var(--accent); user-select: none; flex: 0 0 auto; }
 
       button.copy {
         width: 32px; height: 32px; cursor: pointer;
-        border: 1px solid #5a5a5a; background: transparent; color: #fff;
+        border: 1px solid var(--rule); background: transparent; color: var(--fg);
         display: inline-flex; align-items: center; justify-content: center;
       }
-      button.copy:hover, button.copy.copied { border-color: #fff; }
+      button.copy:hover, button.copy.copied { border-color: var(--accent); color: var(--accent); }
       button.copy svg { width: 15px; height: 15px; }
       button.copy .check-icon { display: none; }
       button.copy.copied .copy-icon { display: none; }
@@ -191,7 +192,7 @@
 
       .note {
         margin-top: 10px;
-        border-left: 4px solid var(--fg);
+        border-left: 4px solid var(--accent);
         background: var(--wash);
         color: var(--fg);
       }
@@ -202,7 +203,7 @@
         display: grid; grid-template-columns: 1fr auto; gap: 12px;
       }
       .note > summary::-webkit-details-marker { display: none; }
-      .note > summary::after { content: "show"; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+      .note > summary::after { content: "show"; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
       .note[open] > summary::after { content: "hide"; }
       .note > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
       .note .body { padding: 0 12px 12px; }
@@ -212,7 +213,7 @@
       table.cli { width: 100%; border-collapse: collapse; margin-top: 8px; }
       table.cli th, table.cli td {
         text-align: left; vertical-align: top;
-        padding: 12px 8px; border-bottom: 1px solid var(--fg);
+        padding: 12px 8px; border-bottom: 1px solid var(--rule);
       }
       table.cli th {
         font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
@@ -220,23 +221,23 @@
       }
       table.cli td:first-child { white-space: nowrap; }
       .cli .cell { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-      table.cli button.copy { color: var(--fg); border-color: var(--fg); }
-      table.cli button.copy:hover { background: var(--fg); color: #fff; }
+      table.cli button.copy { color: var(--fg); border-color: var(--rule); }
+      table.cli button.copy:hover { background: var(--accent); color: var(--ink); border-color: var(--accent); }
 
       .facts { display: grid; gap: 0; margin-top: 8px; }
       .fact {
         display: grid; grid-template-columns: 180px 1fr;
         gap: 20px; padding: 16px 0;
-        border-top: 1px solid #d4d4d4;
+        border-top: 1px solid var(--rule);
       }
-      .fact:first-child { border-top: 2px solid var(--rule); }
+      .fact:first-child { border-top: 2px solid var(--accent); }
       .fact h3 { margin: 0; font-size: 16px; font-weight: 600; }
       .fact p { margin: 0; }
 
       .fail { margin: 22px 0 0; }
       .fail h3 { margin: 0 0 8px; font-size: 18px; }
       .err {
-        background: var(--fg); color: #fff;
+        background: var(--ink); color: var(--fg);
         font-family: var(--mono); font-size: 13px;
         padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
         margin: 10px 0 12px;
@@ -250,7 +251,7 @@
         }
         .rail nav { flex-direction: row; flex-wrap: wrap; gap: 4px 0; }
         .rail nav a { border-left: 0; border-bottom: 2px solid transparent; padding: 6px 10px; }
-        .rail nav a:hover { border-bottom-color: #fff; }
+        .rail nav a:hover { border-bottom-color: var(--accent); }
         .rail-foot { display: none; }
         .page { padding: 28px 18px 56px; }
         .pair, .fact { grid-template-columns: 1fr; }
