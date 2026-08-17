@@ -19,11 +19,17 @@
           inherit system;
           overlays = [ bun2nix.overlays.default ];
         };
+      builtFor = system: (pkgsFor system).callPackage ./default.nix { };
     in
     {
       packages = eachSystem (system: {
-        default = (pkgsFor system).callPackage ./default.nix { };
+        default = (builtFor system).xyne-boxes;
         bun2nix = (pkgsFor system).bun2nix;
+      });
+
+      checks = eachSystem (system: {
+        inherit (builtFor system) tests typecheck;
+        package = (builtFor system).xyne-boxes;
       });
 
       devShells = eachSystem (
