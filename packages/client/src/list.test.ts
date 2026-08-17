@@ -8,6 +8,29 @@ describe("parseList", () => {
     ])
   })
 
+  test("parses a pipe table from the server", () => {
+    expect(
+      parseList(`NAME | LOCATION |
+headscale-in1 | dev-x86-64-linux-03 |
+kolu-bot | dev-x86-64-linux-08 |
+`),
+    ).toEqual([
+      { name: "headscale-in1", location: "dev-x86-64-linux-03", extra: [] },
+      { name: "kolu-bot", location: "dev-x86-64-linux-08", extra: [] },
+    ])
+  })
+
+  test("skips ascii table rules", () => {
+    expect(
+      parseList(`+------+----------+
+| NAME | LOCATION |
++------+----------+
+| box  | host-a   |
++------+----------+
+`),
+    ).toEqual([{ name: "box", location: "host-a", extra: [] }])
+  })
+
   test("treats an empty listing as no rows", () => {
     expect(parseList("\n")).toEqual([])
   })

@@ -1,26 +1,21 @@
 import {
-  bold,
-  dim,
+  bold as otBold,
+  dim as otDim,
   fg,
   t,
   type StyledText,
 } from "@opentui/core"
 import type { TextChunk } from "@opentui/core"
 import { TextAttributes } from "@opentui/core"
+import { CliError } from "effect/unstable/cli"
 import { AuthError, CommandFailed, MissingTool, UsageError } from "./errors.ts"
 import type { ListRow } from "./list.ts"
 
-const ACCENT = "#e8a317"
-const OK = "#6fcf8e"
-const ERR = "#e8695b"
-const MUTED = "#c9bda6"
-const FG = "#f3ead8"
-
-const gold = fg(ACCENT)
-const ok = fg(OK)
-const err = fg(ERR)
-const muted = fg(MUTED)
-const ink = fg(FG)
+const gold = fg("#e8a317")
+const ok = fg("#6fcf8e")
+const err = fg("#e8695b")
+const muted = fg("#c9bda6")
+const ink = fg("#f3ead8")
 
 const SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"] as const
 
@@ -32,7 +27,7 @@ export function colorEnabled(stream: NodeJS.WriteStream = process.stderr): boole
 }
 
 export function plainText(input: StyledText | string): string {
-  if (typeof input === "string") return input
+  if (typeof input === "string") return input.replace(/\x1b\[[0-9;]*m/g, "")
   return input.chunks.map((chunk) => chunk.text).join("")
 }
 
@@ -66,10 +61,7 @@ export function renderStyled(
   return input.chunks.map(chunkAnsi).join("")
 }
 
-const writeLine = (
-  stream: NodeJS.WriteStream,
-  input: StyledText | string,
-): void => {
+const writeLine = (stream: NodeJS.WriteStream, input: StyledText | string): void => {
   stream.write(`${renderStyled(input, stream)}\n`)
 }
 
@@ -82,12 +74,12 @@ export const printErr = (input: StyledText | string): void => {
 }
 
 export function helpText(cliName: string): StyledText {
-  return t`${gold(bold("xyne-boxes"))}  ${muted("remote Linux boxes, one SSH away")}
+  return t`${gold(otBold("xyne-boxes"))}  ${muted("remote Linux boxes, one SSH away")}
 
-${ink(bold("Usage"))}
+${ink(otBold("Usage"))}
   ${gold(cliName)} ${muted("<command>")}
 
-${ink(bold("Commands"))}
+${ink(otBold("Commands"))}
   ${gold("create")} ${muted("<name>")}                 Create a box
   ${gold("connect")} ${muted("<name> [ssh …]")}        SSH in; ${muted("--")} before a remote command
   ${gold("list")}                           List your boxes
@@ -96,7 +88,7 @@ ${ink(bold("Commands"))}
   ${gold("version")}                        Tool versions
   ${gold("help")}                           This screen
 
-${ink(bold("First time"))}
+${ink(otBold("First time"))}
   ${muted("A browser window asks you to sign in with your Juspay Google account.")}
   ${muted("Certificates last about a week; connect again to renew.")}
 `
@@ -114,6 +106,11 @@ export function spinner(message: string): Spinner {
   let current = message
   let i = 0
   let timer: ReturnType<typeof setInterval> | undefined
+  let live = true
+
+  const clearLine = (): void => {
+    if (tty) process.stderr.write("\r\x1b[2K")
+  }
 
   const paint = (kind: "spin" | "ok" | "fail", glyph: string, msg: string, newline: boolean): void => {
     const mark = kind === "ok" ? ok(glyph) : kind === "fail" ? err(glyph) : gold(glyph)
@@ -128,24 +125,24 @@ export function spinner(message: string): Spinner {
   if (tty) {
     paint("spin", SPINNER[0]!, current, false)
     timer = setInterval(() => {
+      if (!live) return
       i = (i + 1) % SPINNER.length
       paint("spin", SPINNER[i]!, current, false)
     }, 80)
-  } else {
-    paint("spin", "→", current, true)
   }
 
   const stop = (): void => {
+    live = false
     if (timer !== undefined) {
       clearInterval(timer)
       timer = undefined
     }
+    clearLine()
   }
 
   return {
     update(next: string) {
       current = next
-      if (!tty) paint("spin", "→", current, true)
     },
     succeed(next: string) {
       stop()
@@ -162,7 +159,7 @@ export function spinner(message: string): Spinner {
 export function printList(rows: ReadonlyArray<ListRow>, raw: string): void {
   if (rows.length === 0) {
     const leftover = raw.trim()
-    if (leftover !== "") printOut(t`${ink(leftover)}`)
+    if (leftover !== "") printOut(leftover)
     else printOut(t`${muted("No boxes.")}`)
     return
   }
@@ -172,7 +169,7 @@ export function printList(rows: ReadonlyArray<ListRow>, raw: string): void {
   for (const row of rows) {
     const loc = row.location ?? ""
     const extra = row.extra.length > 0 ? ` ${row.extra.join(" ")}` : ""
-    printOut(t`${gold(bold(row.name.padEnd(nameW)))}  ${ink(loc)}${muted(extra)}`)
+    printOut(t`${gold(otBold(row.name.padEnd(nameW)))}  ${ink(loc)}${muted(extra)}`)
   }
 }
 
@@ -184,7 +181,7 @@ export function printVersion(rows: ReadonlyArray<readonly [string, string]>): vo
 }
 
 export function printReady(cliName: string, name: string): void {
-  printErr(t`${ok("✓")} ${ink("Ready")}  ${gold(bold(name))}`)
+  printErr(t`${ok("✓")} ${ink("Ready")}  ${gold(otBold(name))}`)
   printErr(t`  ${muted("Connect")}  ${gold(`${cliName} connect ${name}`)}`)
 }
 
@@ -194,13 +191,20 @@ export function printDestroyed(names: ReadonlyArray<string>): void {
 
 export function printConnecting(name: string, remote: ReadonlyArray<string>): void {
   if (remote.length > 0) {
-    printErr(t`${gold("→")} ${ink("Running on")} ${gold(bold(name))} ${muted(remote.join(" "))}`)
+    printErr(t`${gold("→")} ${ink("Running on")} ${gold(otBold(name))} ${muted(remote.join(" "))}`)
     return
   }
-  printErr(t`${gold("→")} ${ink("Connecting to")} ${gold(bold(name))}`)
+  printErr(t`${gold("→")} ${ink("Connecting to")} ${gold(otBold(name))}`)
 }
 
 export function printError(error: unknown): number {
+  if (CliError.isCliError(error)) {
+    if (error._tag === "ShowHelp") {
+      return error.errors.length > 0 ? 1 : 0
+    }
+    printErr(t`${err("✗")} ${ink(error.message)}`)
+    return 1
+  }
   if (error instanceof UsageError) {
     printErr(t`${err("✗")} ${ink(error.message)}`)
     printErr(t`  ${muted("Try")} ${gold("help")}`)
@@ -219,7 +223,7 @@ export function printError(error: unknown): number {
   if (error instanceof CommandFailed) {
     const argv = [error.command, ...error.args].join(" ")
     printErr(t`${err("✗")} ${ink("Command failed")}  ${muted(`exit ${error.exitCode}`)}`)
-    printErr(t`  ${dim(argv)}`)
+    printErr(t`  ${otDim(argv)}`)
     if (error.command === "ssh") {
       printErr(
         t`  ${muted("If this is a certificate expiry, run")} ${gold("connect")} ${muted("and sign in again.")}`,
@@ -237,5 +241,3 @@ export function printError(error: unknown): number {
   printErr(t`${err("✗")} ${ink(message)}`)
   return 1
 }
-
-
