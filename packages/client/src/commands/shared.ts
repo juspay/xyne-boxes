@@ -28,12 +28,13 @@ export const withSpinner = <A, E, R>(
   fail: string,
   run: (hooks: LaunchHooks) => Effect.Effect<A, E, R>,
   onOk: (value: A) => void,
+  waiting: string = start,
 ): Effect.Effect<void, E, R> => {
   const spin = spinner(start)
   return run({
     onSigning: () => spin.update("Signing SSH key — a browser may open"),
     onCreating: () => spin.update(start),
-    onWaiting: () => spin.update(start),
+    onWaiting: () => spin.update(waiting),
   }).pipe(
     Effect.tapError(() => Effect.sync(() => spin.fail(fail))),
     Effect.map((value) => {
@@ -48,17 +49,5 @@ export const launchAndAnnounce = (
   fail: string,
   waiting: string,
   run: (hooks: LaunchHooks) => Effect.Effect<LaunchResult, ClientError, ClientReq>,
-): Effect.Effect<void, ClientError, ClientReq> => {
-  const spin = spinner(start)
-  return run({
-    onSigning: () => spin.update("Signing SSH key — a browser may open"),
-    onCreating: () => spin.update(start),
-    onWaiting: () => spin.update(waiting),
-  }).pipe(
-    Effect.tapError(() => Effect.sync(() => spin.fail(fail))),
-    Effect.map((result) => {
-      spin.stop()
-      printReady(cliName(), result.name)
-    }),
-  )
-}
+): Effect.Effect<void, ClientError, ClientReq> =>
+  withSpinner(start, fail, run, (result) => printReady(cliName(), result.name), waiting)

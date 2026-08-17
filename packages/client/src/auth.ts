@@ -1,6 +1,6 @@
 import { Effect, FileSystem } from "effect"
 import type { PlatformError } from "effect/PlatformError"
-import { type ResolvedConfig, identityPaths, MAC_OPT } from "./config.ts"
+import { type ResolvedConfig, identityPaths } from "./config.ts"
 import { AuthError, MissingTool } from "./errors.ts"
 import { lastProcessLine, runCaptured, runExitCode, type ProcessReq } from "./process.ts"
 import { resolveStep } from "./tools.ts"
@@ -25,6 +25,9 @@ export type Auth =
       readonly identityFile: string
       readonly certificateFile: string
     })
+
+const MAC_OPT =
+  "MACs=hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
 
 const macArgs = ["-o", MAC_OPT] as const
 

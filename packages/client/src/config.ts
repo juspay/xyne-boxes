@@ -50,9 +50,6 @@ export function resolveConfig(options: ClientOptions = {}): ResolvedConfig {
   }
 }
 
-export const MAC_OPT =
-  "MACs=hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
-
 export function identityPaths(stateDir: string): {
   readonly key: string
   readonly cert: string
