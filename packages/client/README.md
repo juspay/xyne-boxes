@@ -47,7 +47,7 @@ External apps import `Client` and stay in Effect. The CLI parses argv, calls the
 
 ## Library
 
-Peers: `effect` and `@effect/platform-node` (4.0.0-beta.103). Bun can import this package from source.
+Peers: `effect` and `@effect/platform-node` (4.0.0-rc.110). Bun can import this package from source.
 
 ```ts
 import { Client, sshArgv } from "xyne-boxes"

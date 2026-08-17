@@ -8,10 +8,10 @@
       "packages/*"
     ],
     "catalog": {
-      "@effect/platform-node": "4.0.0-beta.103",
+      "@effect/platform-node": "4.0.0-rc.110",
       "@opentui/core": "0.4.5",
       "@types/bun": "^1.2.0",
-      "effect": "4.0.0-beta.103",
+      "effect": "4.0.0-rc.110",
       "typescript": "^5.8.0"
     }
   },

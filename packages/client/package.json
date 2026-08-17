@@ -24,8 +24,8 @@
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform-node": "4.0.0-beta.103",
-    "effect": "4.0.0-beta.103"
+    "@effect/platform-node": "4.0.0-rc.110",
+    "effect": "4.0.0-rc.110"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
