@@ -1,14 +1,27 @@
 import { describe, expect, test } from "bun:test"
+import type { Auth } from "./auth.ts"
 import { formatSshConfigFile, sshArgv, type SshConfig } from "./ssh.ts"
+
+const caOff: Auth = {
+  useSshCa: false,
+  sshArgs: [],
+  instanceSshArgs: [],
+}
+
+const caOn: Auth = {
+  useSshCa: true,
+  identityFile: "/tmp/key",
+  certificateFile: "/tmp/key-cert.pub",
+  sshArgs: [],
+  instanceSshArgs: [],
+}
 
 describe("formatSshConfigFile", () => {
   test("writes identity when CA is on", () => {
     const text = formatSshConfigFile({
       name: "mybox",
       user: "toor",
-      useSshCa: true,
-      identityFile: "/tmp/key",
-      certificateFile: "/tmp/key-cert.pub",
+      auth: caOn,
       proxyCommand: "/tmp/ssh-proxy mybox ssh -T pu@pu connect mybox",
     })
     expect(text).toContain("Host mybox")
@@ -23,7 +36,7 @@ describe("formatSshConfigFile", () => {
     const text = formatSshConfigFile({
       name: "mybox",
       user: "toor",
-      useSshCa: false,
+      auth: caOff,
       proxyCommand: "proxy",
     })
     expect(text).not.toContain("IdentityFile")

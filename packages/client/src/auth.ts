@@ -1,7 +1,7 @@
 import { Effect, FileSystem } from "effect"
 import type { PlatformError } from "effect/PlatformError"
 import { type ResolvedConfig, identityPaths, MAC_OPT } from "./config.ts"
-import { AuthError, CommandFailed, MissingTool } from "./errors.ts"
+import { AuthError, MissingTool } from "./errors.ts"
 import { lastProcessLine, runCaptured, runExitCode, type ProcessReq } from "./process.ts"
 import { resolveStep } from "./tools.ts"
 
@@ -9,15 +9,22 @@ export interface AuthHooks {
   readonly onSigning?: () => void
 }
 
-export interface Auth {
-  readonly useSshCa: boolean
-  readonly identityFile: string | undefined
-  readonly certificateFile: string | undefined
+type AuthBase = {
   /** ssh args for the control plane (`pu@host`). */
   readonly sshArgs: ReadonlyArray<string>
   /** ssh args for an instance hop (no known-hosts file). */
   readonly instanceSshArgs: ReadonlyArray<string>
 }
+
+export type Auth =
+  | (AuthBase & {
+      readonly useSshCa: false
+    })
+  | (AuthBase & {
+      readonly useSshCa: true
+      readonly identityFile: string
+      readonly certificateFile: string
+    })
 
 const macArgs = ["-o", MAC_OPT] as const
 
@@ -55,7 +62,7 @@ export const ensureAuth = (
   hooks: AuthHooks = {},
 ): Effect.Effect<
   Auth,
-  AuthError | MissingTool | CommandFailed | PlatformError,
+  AuthError | MissingTool | PlatformError,
   ProcessReq | FileSystem.FileSystem
 > =>
   Effect.gen(function* () {
@@ -65,8 +72,6 @@ export const ensureAuth = (
     if (!config.useSshCa) {
       return {
         useSshCa: false,
-        identityFile: undefined,
-        certificateFile: undefined,
         sshArgs: [...macArgs, "-o", "StrictHostKeyChecking=no"],
         instanceSshArgs: [...macArgs],
       }

@@ -46,18 +46,16 @@ MESSAGE
 export function formatSshConfigFile(input: {
   readonly name: string
   readonly user: string
-  readonly useSshCa: boolean
-  readonly identityFile?: string
-  readonly certificateFile?: string
+  readonly auth: Auth
   readonly proxyCommand: string
 }): string {
   const lines = [
     `Host ${input.name}`,
     `  User ${input.user}`,
   ]
-  if (input.useSshCa && input.identityFile !== undefined && input.certificateFile !== undefined) {
-    lines.push(`  IdentityFile ${input.identityFile}`)
-    lines.push(`  CertificateFile ${input.certificateFile}`)
+  if (input.auth.useSshCa) {
+    lines.push(`  IdentityFile ${input.auth.identityFile}`)
+    lines.push(`  CertificateFile ${input.auth.certificateFile}`)
     lines.push("  IdentitiesOnly yes")
   }
   lines.push(`  ProxyCommand ${input.proxyCommand}`)
@@ -117,9 +115,7 @@ export const writeInstanceSshConfig = (
       formatSshConfigFile({
         name,
         user: config.admin,
-        useSshCa: auth.useSshCa,
-        identityFile: auth.identityFile,
-        certificateFile: auth.certificateFile,
+        auth,
         proxyCommand: proxy,
       }),
     )
