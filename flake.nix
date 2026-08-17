@@ -23,18 +23,42 @@
         if self ? rev && self.rev != null then self.rev
         else if self ? dirtyRev then self.dirtyRev
         else "unknown";
-      builtFor = system: (pkgsFor system).callPackage ./default.nix { inherit gitRev; };
+      forSystem =
+        system:
+        let
+          pkgs = pkgsFor system;
+          workspace = pkgs.callPackage ./nix/workspace.nix {
+            root = ./.;
+          };
+          client = pkgs.callPackage ./packages/client {
+            inherit workspace;
+          };
+          cli = pkgs.callPackage ./packages/cli {
+            inherit workspace gitRev;
+          };
+          installer-test = pkgs.callPackage ./installer {
+            root = ./.;
+          };
+        in
+        {
+          packages = {
+            default = cli.xyne-boxes;
+            bun2nix = pkgs.bun2nix;
+          };
+          checks = {
+            client-tests = client.tests;
+            client-typecheck = client.typecheck;
+            cli-tests = cli.tests;
+            cli-typecheck = cli.typecheck;
+            inherit installer-test;
+            package = cli.xyne-boxes;
+          };
+        };
     in
     {
-      packages = eachSystem (system: {
-        default = (builtFor system).xyne-boxes;
-        bun2nix = (pkgsFor system).bun2nix;
-      });
+      packages = eachSystem (system: (forSystem system).packages);
 
-      checks = eachSystem (system: {
-        inherit (builtFor system) tests typecheck installer-test;
-        package = (builtFor system).xyne-boxes;
-      });
+      checks = eachSystem (system: (forSystem system).checks);
 
       devShells = eachSystem (
         system:
