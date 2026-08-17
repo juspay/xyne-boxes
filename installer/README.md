@@ -16,6 +16,8 @@ Drops both binaries in `~/.local/bin`:
 | File | Role |
 | --- | --- |
 | `install.sh` | What the user pipes to `sh` |
+| `assemble-release.sh` | CI: official `step` + stamped `install.sh` + checksums |
+| `test/` | Installer tests (`install.test.sh`, `curl-install.sh`) |
 
 The script prints the nightly **commit hash** (baked in at publish, or read from the `COMMIT` asset). `xyne-boxes version` prints the same hash from the binary, so a cached download is obvious. Downloads go to a temp file in the dest dir, are checked against `SHA256SUMS`, then `mv`'d over the previous binary.
 

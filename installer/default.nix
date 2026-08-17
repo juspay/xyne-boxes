@@ -20,8 +20,8 @@ pkgs.stdenv.mkDerivation {
     pkgs.gzip
   ];
   buildPhase = ''
-    chmod +x installer/install.sh installer/install.test.sh
-    sh installer/install.test.sh
+    chmod +x installer/install.sh installer/test/install.test.sh
+    sh installer/test/install.test.sh
   '';
   installPhase = ''
     mkdir -p "$out"

@@ -3,6 +3,7 @@
 set -eu
 
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+installer=$(CDPATH= cd -- "$here/.." && pwd)
 root=$(mktemp -d)
 trap 'rm -rf "$root"' EXIT
 
@@ -57,7 +58,7 @@ export XYNE_BOXES_RELEASE="file://$release"
 export XYNE_BOXES_BIN="$bin"
 export XYNE_BOXES_COMMIT="deadbeef"
 
-sh "$here/install.sh"
+sh "$installer/install.sh"
 
 assert test -x "$bin/xyne-boxes"
 assert test -x "$bin/step"
@@ -67,7 +68,7 @@ assert test "$(readlink "$bin/pu")" = "xyne-boxes"
 # Bad checksum on the *second* asset must not replace a working install
 # (a first-asset-only corrupt would miss a half-install).
 printf '%s\n' '#!/bin/sh' 'echo corrupted-step' > "$release/$step"
-if sh "$here/install.sh"; then
+if sh "$installer/install.sh"; then
   echo "install.test.sh: expected checksum mismatch to fail" >&2
   exit 1
 fi
@@ -79,7 +80,7 @@ assert test "$("$bin/step")" = "Smallstep CLI/test"
 # Pristine dest + bad step must leave no xyne-boxes / pu.
 fresh="$root/fresh"
 mkdir -p "$fresh"
-XYNE_BOXES_BIN="$fresh" sh "$here/install.sh" && {
+XYNE_BOXES_BIN="$fresh" sh "$installer/install.sh" && {
   echo "install.test.sh: expected pristine+bad-step to fail" >&2
   exit 1
 }
@@ -91,7 +92,7 @@ assert test ! -e "$fresh/step"
 make_release "$release"
 unset XYNE_BOXES_COMMIT
 commit_log="$root/commit.log"
-sh "$here/install.sh" >"$commit_log" 2>&1
+sh "$installer/install.sh" >"$commit_log" 2>&1
 grep -q 'commit deadbeef' "$commit_log"
 export XYNE_BOXES_COMMIT="deadbeef"
 
@@ -99,7 +100,7 @@ export XYNE_BOXES_COMMIT="deadbeef"
 rm -f "$bin/pu"
 printf '%s\n' '#!/bin/sh' 'echo keep-me' > "$bin/pu"
 chmod 755 "$bin/pu"
-if sh "$here/install.sh"; then
+if sh "$installer/install.sh"; then
   echo "install.test.sh: expected refuse to overwrite pu" >&2
   exit 1
 fi
@@ -115,7 +116,7 @@ else
   profile="$home/.profile"
 fi
 printf '\n# notes about xyne-boxes\n' > "$profile"
-sh "$here/install.sh"
+sh "$installer/install.sh"
 grep -Fqx "export PATH=\"$bin:\$PATH\"  # xyne-boxes" "$profile"
 count=$(grep -c 'xyne-boxes' "$profile")
 assert test "$count" -eq 2

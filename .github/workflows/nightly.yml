@@ -45,8 +45,7 @@ jobs:
           bun test ./packages/client ./packages/cli
           bunx tsc --noEmit -p packages/client
           bunx tsc --noEmit -p packages/cli
-          chmod +x installer/install.test.sh
-          sh installer/install.test.sh
+          sh installer/test/install.test.sh
 
       - name: Stamp commit into the binary
         run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/cli/src/commit.ts
@@ -78,10 +77,8 @@ jobs:
         include:
           - os: macos-latest
             boxes: xyne-boxes-darwin-arm64
-            step_asset: step-darwin-arm64
           - os: ubuntu-latest
             boxes: xyne-boxes-linux-x64
-            step_asset: step-linux-x64
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -98,41 +95,8 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      - name: Assemble a local release and curl-install it
-        run: |
-          set -eux
-          chmod +x installer/install.sh
-          nix build ".#${{ matrix.step_asset }}" --out-link step-out
-          cp step-out/bin/step "dist/${{ matrix.step_asset }}"
-          printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
-          cp installer/install.sh dist/install.sh
-          chmod +x dist/"${{ matrix.boxes }}" dist/"${{ matrix.step_asset }}" dist/install.sh
-          (
-            cd dist
-            if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum "${{ matrix.boxes }}" "${{ matrix.step_asset }}" install.sh COMMIT
-            else
-              shasum -a 256 "${{ matrix.boxes }}" "${{ matrix.step_asset }}" install.sh COMMIT
-            fi
-          ) > dist/SHA256SUMS
-          python3 -m http.server 8765 --bind 127.0.0.1 --directory dist > /tmp/xyne-http.log 2>&1 &
-          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-            if curl -fsS http://127.0.0.1:8765/COMMIT >/dev/null; then
-              break
-            fi
-            sleep 0.25
-          done
-          cat /tmp/xyne-http.log
-          curl -fsS http://127.0.0.1:8765/COMMIT >/dev/null
-          export XYNE_BOXES_RELEASE=http://127.0.0.1:8765
-          export XYNE_BOXES_BIN="${HOME}/.local/bin"
-          curl -fsSL "${XYNE_BOXES_RELEASE}/install.sh" | sh
-          if [ "$(uname -s)" = Darwin ]; then
-            echo "xattr after install:"
-            xattr -l "${XYNE_BOXES_BIN}/xyne-boxes" || true
-          fi
-          "${XYNE_BOXES_BIN}/xyne-boxes" version
-          "${XYNE_BOXES_BIN}/step" version | head -n 1
+      - name: Curl-install
+        run: sh installer/test/curl-install.sh dist
 
   publish:
     name: Publish nightly tag
@@ -154,22 +118,10 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      - name: Official step binaries
+      - name: Assemble release
         run: |
-          mkdir -p dist
-          for p in step-darwin-arm64 step-linux-x64; do
-            nix build ".#$p" --out-link "$p"
-            cp "$p/bin/step" "dist/$p"
-          done
-          printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
-          sed "s/__XYNE_COMMIT__/${GITHUB_SHA}/g" installer/install.sh > dist/install.sh
-          chmod +x dist/xyne-boxes-* dist/step-* dist/install.sh
-
-      - name: Checksums
-        working-directory: dist
-        run: |
-          sha256sum xyne-boxes-* step-* install.sh COMMIT | tee SHA256SUMS
-          ls -lh
+          sh installer/assemble-release.sh dist
+          ls -lh dist
 
       - name: Recreate the Nightly prerelease
         if: github.event_name != 'pull_request'
