@@ -411,11 +411,13 @@ ssh-add ~/.ssh/id_ed25519</code></pre>
                 <details class="note">
                   <summary>Prefer ssh &lt;name&gt; instead of connect</summary>
                   <div class="body">
-                    <p>Do this once. After that, plain <code>ssh &lt;name&gt;</code> works for every box you create.</p>
+                    <p>Do this once. The <code>Include</code> line must sit at the top of <code>~/.ssh/config</code> — SSH scopes it to the last <code>Host</code> block if it is appended. After that, plain <code>ssh &lt;name&gt;</code> works for every box you create. If you already appended the line, move it to the top.</p>
                     <div class="snip">
                       <pre><span class="p">$</span><code id="cmd-include">mkdir -p ~/.ssh
-grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
-  || printf '\nInclude ~/.pu-state/*/ssh_config\n' >> ~/.ssh/config</code></pre>
+touch ~/.ssh/config
+grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
+  || { { printf 'Include ~/.pu-state/*/ssh_config\n\n'; cat ~/.ssh/config; } > ~/.ssh/config.new \
+        && mv ~/.ssh/config.new ~/.ssh/config; }</code></pre>
                       <button type="button" class="copy" data-copy="#cmd-include" aria-label="Copy" title="Copy">
                         <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                         <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
