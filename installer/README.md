@@ -19,6 +19,12 @@ Drops both binaries in `~/.local/bin`:
 | `fetch-step.sh` | CI: download official `step` for `darwin-arm64` / `linux-x64` |
 | `step-version` | Pinned Smallstep release |
 
-The script prints the nightly **commit hash** (baked in at publish, or read from the `COMMIT` asset). `xyne-boxes version` prints the same hash from the binary, so a cached download is obvious.
+The script prints the nightly **commit hash** (baked in at publish, or read from the `COMMIT` asset). `xyne-boxes version` prints the same hash from the binary, so a cached download is obvious. Downloads go to a temp file in the dest dir, are checked against `SHA256SUMS`, then `mv`'d over the previous binary.
+
+`main` publishes the `nightly` tag. Other branches publish `nightly-<branch>` so they do not overwrite it. This PR is `nightly-ts`:
+
+```
+curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly-ts/install.sh | sh
+```
 
 Override install location or release with `XYNE_BOXES_BIN` / `XYNE_BOXES_RELEASE`. `XYNE_BOXES_COMMIT` overrides the printed hash.

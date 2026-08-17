@@ -77,4 +77,30 @@ in
   typecheck = bunCheck "typecheck" ''
     bunx tsc --noEmit -p packages/client
   '';
+  installer-test = pkgs.stdenv.mkDerivation {
+    pname = "xyne-boxes-installer-test";
+    inherit version;
+    src = lib.fileset.toSource {
+      root = ./.;
+      fileset = ./installer;
+    };
+    nativeBuildInputs = [
+      pkgs.curl
+      pkgs.coreutils
+      pkgs.gnugrep
+      pkgs.gawk
+      pkgs.gnutar
+      pkgs.gzip
+    ];
+    buildPhase = ''
+      chmod +x installer/install.sh installer/install.test.sh \
+        installer/fetch-step.sh installer/fetch-step.test.sh
+      sh installer/install.test.sh
+      sh installer/fetch-step.test.sh
+    '';
+    installPhase = ''
+      mkdir -p "$out"
+      echo ok > "$out/installer-test"
+    '';
+  };
 }

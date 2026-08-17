@@ -215,7 +215,15 @@ export type ErrorView = {
 export function describeError(error: unknown): ErrorView {
   if (CliError.isCliError(error)) {
     if (error._tag === "ShowHelp") {
-      return { headline: error.message, exitCode: error.errors.length > 0 ? 1 : 0 }
+      if (error.errors.length === 0) {
+        return { headline: error.message, exitCode: 0 }
+      }
+      const [first, ...rest] = error.errors
+      return {
+        headline: first?.message ?? error.message,
+        detail: rest.length > 0 ? rest.map((item) => item.message).join("\n") : "Try help",
+        exitCode: 1,
+      }
     }
     return { headline: error.message, exitCode: 1 }
   }
@@ -276,15 +284,8 @@ export function describeError(error: unknown): ErrorView {
 }
 
 export function printError(error: unknown): number {
-  if (CliError.isCliError(error) && error._tag === "ShowHelp") {
-    return error.errors.length > 0 ? 1 : 0
-  }
-  if (error instanceof MissingTool || tagOf(error) === "MissingTool") {
-    const tool = asString(field(error, "tool")) ?? "tool"
-    const hint = asString(field(error, "hint"))
-    printErr(t`${err("✗")} ${gold(tool)} ${ink("is not on PATH")}`)
-    if (hint !== undefined) printErr(t`  ${muted(hint)}`)
-    return 1
+  if (CliError.isCliError(error) && error._tag === "ShowHelp" && error.errors.length === 0) {
+    return 0
   }
   const view = describeError(error)
   printErr(t`${err("✗")} ${ink(view.headline)}`)

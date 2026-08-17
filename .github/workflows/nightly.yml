@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: nightly
+  group: nightly-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -42,6 +42,9 @@ jobs:
         run: |
           bun test ./packages/client
           bunx tsc --noEmit -p packages/client
+          chmod +x installer/install.test.sh installer/fetch-step.test.sh
+          sh installer/install.test.sh
+          sh installer/fetch-step.test.sh
 
       - name: Stamp commit into the binary
         run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/client/src/commit.ts
@@ -96,21 +99,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view nightly >/dev/null 2>&1; then
-            gh release delete nightly --yes
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            TAG=nightly
+          else
+            TAG="nightly-${GITHUB_REF_NAME}"
           fi
-          git tag -f nightly "${GITHUB_SHA}"
-          git push -f origin refs/tags/nightly
-          gh release create nightly \
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" --yes
+          fi
+          git tag -f "$TAG" "${GITHUB_SHA}"
+          git push -f origin "refs/tags/${TAG}"
+          gh release create "$TAG" \
             --prerelease \
-            --title "Nightly" \
+            --title "Nightly (${GITHUB_REF_NAME})" \
             --target "${GITHUB_SHA}" \
-            --notes "Moving nightly from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
+            --notes "Moving \`${TAG}\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
           Pristine macOS (Apple Silicon) and Linux x86_64:
 
           \`\`\`
-          curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+          curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/${TAG}/install.sh | sh
           \`\`\`
 
           \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required." \

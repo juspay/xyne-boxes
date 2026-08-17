@@ -3,6 +3,7 @@ import { Argument, Command } from "effect/unstable/cli"
 import { ChildProcess } from "effect/unstable/process"
 import { parseConnectArgs } from "../connect-args.ts"
 import { UsageError } from "../errors.ts"
+import { waitExitCode } from "../process.ts"
 import { sshArgv } from "../ssh.ts"
 import { printConnecting, spinner } from "../ui.ts"
 import { cliName, makeClient } from "./shared.ts"
@@ -40,7 +41,7 @@ export const connect = Command.make(
         stderr: "inherit",
         extendEnv: true,
       })
-      const code = Number(yield* handle.exitCode)
+      const code = yield* waitExitCode(handle)
       if (code !== 0) {
         return yield* Effect.sync(() => process.exit(code))
       }

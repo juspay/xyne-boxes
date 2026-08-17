@@ -32,7 +32,7 @@
       });
 
       checks = eachSystem (system: {
-        inherit (builtFor system) tests typecheck;
+        inherit (builtFor system) tests typecheck installer-test;
         package = (builtFor system).xyne-boxes;
       });
 

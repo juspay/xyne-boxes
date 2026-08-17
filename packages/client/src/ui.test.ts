@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { CliError } from "effect/unstable/cli"
 import { AuthError, CommandFailed } from "./errors.ts"
 import { describeError, helpText, plainText } from "./ui.ts"
 
@@ -49,5 +50,14 @@ describe("describeError", () => {
         stderr: error.stderr,
       }),
     ).toEqual(describeError(error))
+  })
+
+  test("ShowHelp with parse errors surfaces those errors", () => {
+    const error = new CliError.ShowHelp({
+      commandPath: ["xyne-boxes", "create"],
+      errors: [new CliError.MissingArgument({ argument: "name" })],
+    })
+    expect(describeError(error).headline).toContain("name")
+    expect(describeError(error).exitCode).toBe(1)
   })
 })

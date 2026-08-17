@@ -38,6 +38,51 @@ need() {
 need curl
 need uname
 
+digest() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  else
+    echo "xyne-boxes: need \`sha256sum\` or \`shasum\` to verify downloads" >&2
+    exit 1
+  fi
+}
+
+expected_hash() {
+  sums=$1
+  name=$2
+  awk -v f="$name" '$2 == f { print $1; exit }' "$sums"
+}
+
+fetch() {
+  _url=$1
+  _out=$2
+  echo "xyne-boxes: $_url" >&2
+  curl -fsSL -H 'Cache-Control: no-cache' "$_url" -o "$_out"
+}
+
+install_asset() {
+  _asset=$1
+  _final=$2
+  _tmp="$work/$_asset"
+  fetch "$RELEASE_URL/$_asset" "$_tmp"
+  want=$(expected_hash "$work/SHA256SUMS" "$_asset")
+  if [ -z "$want" ]; then
+    echo "xyne-boxes: $_asset is not in SHA256SUMS" >&2
+    exit 1
+  fi
+  got=$(digest "$_tmp")
+  if [ "$got" != "$want" ]; then
+    echo "xyne-boxes: checksum mismatch for $_asset" >&2
+    echo "xyne-boxes: expected $want" >&2
+    echo "xyne-boxes: got      $got" >&2
+    exit 1
+  fi
+  chmod 755 "$_tmp"
+  mv -f "$_tmp" "$_final"
+}
+
 if [ "$COMMIT" = "__XYNE_COMMIT__" ] || [ -z "$COMMIT" ]; then
   COMMIT=$(curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/COMMIT" 2>/dev/null || true)
 fi
@@ -48,21 +93,21 @@ else
 fi
 
 mkdir -p "$BIN_DIR"
+work=$(mktemp -d "${BIN_DIR}/.xyne-work.XXXXXX")
+trap 'rm -rf "$work"' EXIT
 
 echo "xyne-boxes: installing into $BIN_DIR" >&2
-echo "xyne-boxes: $RELEASE_URL/$boxes_asset" >&2
-curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/$boxes_asset" -o "$BIN_DIR/xyne-boxes"
-chmod 755 "$BIN_DIR/xyne-boxes"
+fetch "$RELEASE_URL/SHA256SUMS" "$work/SHA256SUMS"
+install_asset "$boxes_asset" "$BIN_DIR/xyne-boxes"
 ln -sfn xyne-boxes "$BIN_DIR/pu"
 
-echo "xyne-boxes: $RELEASE_URL/$step_asset  (pristine machines have no step)" >&2
-curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/$step_asset" -o "$BIN_DIR/step"
-chmod 755 "$BIN_DIR/step"
+echo "xyne-boxes: also installing step (pristine machines have none)" >&2
+install_asset "$step_asset" "$BIN_DIR/step"
 
 append_path() {
   profile=$1
   line="export PATH=\"$BIN_DIR:\$PATH\"  # xyne-boxes"
-  if [ -f "$profile" ] && grep -q 'xyne-boxes' "$profile" 2>/dev/null; then
+  if [ -f "$profile" ] && grep -Fqx "$line" "$profile" 2>/dev/null; then
     return
   fi
   printf '\n%s\n' "$line" >> "$profile"

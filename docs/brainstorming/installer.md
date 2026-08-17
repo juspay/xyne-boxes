@@ -21,13 +21,13 @@ Implementation lives in [`installer/`](../../installer/). Nix `run` stays as the
 
 ## Nightly assets
 
-[`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml) on `main` / `ts`:
+[`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml) on `main` (`nightly` tag) / `ts` (`nightly-ts` tag):
 
 - `xyne-boxes-darwin-arm64` / `xyne-boxes-linux-x64` — `bun build --compile` on that OS
-- `step-darwin-arm64` / `step-linux-x64` — `installer/fetch-step.sh` (pinned in `installer/step-version`)
+- `step-darwin-arm64` / `step-linux-x64` — `installer/fetch-step.sh` (pinned in `installer/step-version`, verified against Smallstep `checksums.txt`)
 - `install.sh` — nightly publish bakes `GITHUB_SHA` over `__XYNE_COMMIT__`
 - `COMMIT` — same hash as a one-line file (installer fallback)
-- `SHA256SUMS`
+- `SHA256SUMS` — `install.sh` verifies every binary against this before replacing the dest
 
 `xyne-boxes version` also prints the baked commit so a cached binary is obvious.
 
