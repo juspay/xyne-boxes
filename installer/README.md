@@ -3,7 +3,7 @@
 Curl install for a **pristine** macOS (Apple Silicon) or Linux x86_64 machine. No Nix, no Homebrew, no preinstalled `step`.
 
 ```
-curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
 ```
 
 Drops both binaries in `~/.local/bin`:
@@ -24,7 +24,7 @@ The script prints the nightly **commit hash** (baked in at publish, or read from
 `main` publishes the `nightly` tag. Other branches publish `nightly-<branch>` so they do not overwrite it. This PR is `nightly-ts`:
 
 ```
-curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly-ts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly-ts/installer/install.sh | sh
 ```
 
 Override install location or release with `XYNE_BOXES_BIN` / `XYNE_BOXES_RELEASE`. `XYNE_BOXES_COMMIT` overrides the printed hash.

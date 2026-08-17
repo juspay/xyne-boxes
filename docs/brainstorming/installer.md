@@ -3,7 +3,7 @@
 Hard constraint: works on a **pristine** macOS Apple Silicon or Linux x86_64 machine. No Nix, no Homebrew, no preinstalled `step`.
 
 ```
-curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
 ```
 
 Implementation lives in [`installer/`](../../installer/). Nix `run` stays as the other path.

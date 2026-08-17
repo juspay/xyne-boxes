@@ -111,7 +111,7 @@ jobs:
           Pristine macOS (Apple Silicon) and Linux x86_64:
 
           \`\`\`
-          curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/${TAG}/install.sh | sh
+          curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/${TAG}/installer/install.sh | sh
           \`\`\`
 
           \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required."

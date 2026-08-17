@@ -2,7 +2,7 @@
 # Install xyne-boxes + step on a pristine Mac (Apple Silicon) or Linux x86_64.
 # No Nix, no Homebrew, no preinstalled step.
 #
-#   curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
 set -eu
 
 RELEASE_URL="${XYNE_BOXES_RELEASE:-https://github.com/juspay/xyne-boxes/releases/download/nightly}"

@@ -186,6 +186,8 @@
         display: flex; gap: 10px; min-width: 0;
       }
       .snip pre code { background: none; color: inherit; padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .snip.long pre { overflow-x: auto; }
+      .snip.long pre code { white-space: pre; overflow-wrap: normal; }
       .snip .p { color: var(--accent); user-select: none; flex: 0 0 auto; }
 
       button.copy {
@@ -318,8 +320,8 @@
               <div>
                 <h3>Install the CLI</h3>
                 <p>On a pristine Mac (Apple Silicon) or Linux x86_64, install the CLI (and <code>step</code>) with no Nix. Or <a href="https://juspay.github.io/nixone/">install Nix</a> and skip this — every command can be <code>nix run …</code> instead.</p>
-                <div class="snip">
-                  <pre><span class="p">$</span><code id="cmd-curl">curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh</code></pre>
+                <div class="snip long">
+                  <pre><span class="p">$</span><code id="cmd-curl">curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh</code></pre>
                   <button type="button" class="copy" data-copy="#cmd-curl" aria-label="Copy" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>

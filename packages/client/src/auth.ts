@@ -55,7 +55,7 @@ const requireStep = Effect.gen(function* () {
     return yield* new MissingTool({
       tool: "step",
       hint:
-        "Install with: curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh",
+        "Install with: curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh",
     })
   }
   if (code !== 0) {

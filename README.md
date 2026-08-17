@@ -18,7 +18,7 @@ Everything you need to create and access a box lives on the
 On a pristine Mac (Apple Silicon) or Linux x86_64, no Nix:
 
 ```
-curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
 ```
 
 ## Commands
