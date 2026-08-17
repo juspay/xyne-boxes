@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { Auth } from "./auth.ts"
-import { formatSshConfigFile, sshArgv, type SshConfig } from "./ssh.ts"
+import { formatSshConfigFile, sshArgv, SSH_PROXY_SCRIPT, type SshConfig } from "./ssh.ts"
 
 const caOff: Auth = {
   useSshCa: false,
@@ -41,6 +41,13 @@ describe("formatSshConfigFile", () => {
     })
     expect(text).not.toContain("IdentityFile")
     expect(text).not.toContain("CertificateFile")
+  })
+})
+
+describe("SSH_PROXY_SCRIPT", () => {
+  test("renews with the installed CLI, not nix run", () => {
+    expect(SSH_PROXY_SCRIPT).toContain("xyne-boxes connect $name")
+    expect(SSH_PROXY_SCRIPT).not.toContain("nix run")
   })
 })
 

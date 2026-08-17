@@ -33,7 +33,7 @@ shift
 xyne-boxes: SSH authentication failed. Your certificate may have expired.
 
 Renew it by running:
-  nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect $name
+  xyne-boxes connect $name
 MESSAGE
         fi
         ;;

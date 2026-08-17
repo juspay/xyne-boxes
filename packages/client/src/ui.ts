@@ -1,6 +1,5 @@
 import {
   bold as otBold,
-  dim as otDim,
   fg,
   t,
   type StyledText,
@@ -96,7 +95,6 @@ ${ink(otBold("First time"))}
 
 export interface Spinner {
   readonly update: (message: string) => void
-  readonly succeed: (message: string) => void
   readonly fail: (message: string) => void
   readonly stop: () => void
 }
@@ -112,8 +110,8 @@ export function spinner(message: string): Spinner {
     if (tty) process.stderr.write("\r\x1b[2K")
   }
 
-  const paint = (kind: "spin" | "ok" | "fail", glyph: string, msg: string, newline: boolean): void => {
-    const mark = kind === "ok" ? ok(glyph) : kind === "fail" ? err(glyph) : gold(glyph)
+  const paint = (kind: "spin" | "fail", glyph: string, msg: string, newline: boolean): void => {
+    const mark = kind === "fail" ? err(glyph) : gold(glyph)
     const rendered = renderStyled(t`${mark} ${ink(msg)}`, process.stderr)
     if (tty) {
       process.stderr.write(`\r\x1b[2K${rendered}${newline ? "\n" : ""}`)
@@ -143,10 +141,6 @@ export function spinner(message: string): Spinner {
   return {
     update(next: string) {
       current = next
-    },
-    succeed(next: string) {
-      stop()
-      paint("ok", "✓", next, true)
     },
     fail(next: string) {
       stop()
