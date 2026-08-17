@@ -10,4 +10,4 @@
 
 </div>
 
-Source: [`packages/client`](packages/client/) (library), [`packages/cli`](packages/cli/) (terminal). Feedback: `#xyne-boxes-feedback`.
+Library: [`packages/client`](packages/client/).
