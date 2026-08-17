@@ -2,11 +2,6 @@
 
 The terminal. Parses argv, paints errors, execs `ssh`.
 
-```
-curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
-xyne-boxes <command>
-```
-
-If you already have Nix: `nix run … -- <command>`.
+Install and usage: [the website](https://juspay.github.io/xyne-boxes/).
 
 Library: [`../client`](../client/).

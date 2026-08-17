@@ -78,10 +78,4 @@ Errors are tagged: `UsageError`, `AuthError`, `MissingTool`, `CommandFailed`.
 
 ## CLI
 
-The terminal lives in [`packages/cli`](../cli/). After the [curl installer](../../installer/), the command is `xyne-boxes`. If you already have Nix:
-
-```
-nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- <command>
-```
-
-`create`, `connect`, `list`, `fork`, `destroy`, `version`, `help`. See the [usage guide](https://juspay.github.io/xyne-boxes/).
+The terminal is [`packages/cli`](../cli/). How to install and run it: [usage guide](https://juspay.github.io/xyne-boxes/).
