@@ -7,7 +7,7 @@ The library never spawns `ssh`. It creates, forks, lists, and destroys boxes, an
 ```mermaid
 flowchart TB
   ext["External TypeScript app"]
-  term["Terminal / nix run"]
+  term["Terminal / xyne-boxes"]
 
   subgraph lib ["Library — packages/client"]
     Client["Client.create / fork / list / destroy / sshConfig"]
@@ -78,8 +78,10 @@ Errors are tagged: `UsageError`, `AuthError`, `MissingTool`, `CommandFailed`.
 
 ## CLI
 
+The terminal lives in [`packages/cli`](../cli/). After the [curl installer](../../installer/), the command is `xyne-boxes`. If you already have Nix:
+
 ```
 nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- <command>
 ```
 
-`create`, `connect`, `list`, `fork`, `destroy`, `version`, `help`. Parsed with Effect CLI (`effect/unstable/cli`); command handlers live in [`packages/cli`](../cli/). Nix wraps bun, openssh, and step-cli. See the [usage guide](https://juspay.github.io/xyne-boxes/).
+`create`, `connect`, `list`, `fork`, `destroy`, `version`, `help`. See the [usage guide](https://juspay.github.io/xyne-boxes/).
