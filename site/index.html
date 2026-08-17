@@ -408,14 +408,16 @@ ssh-add ~/.ssh/id_ed25519</code></pre>
                     </div>
                   </div>
                 </details>
-                <details class="note">
+                <details class="note" id="prefer-ssh">
                   <summary>Prefer ssh &lt;name&gt; instead of connect</summary>
                   <div class="body">
-                    <p>Do this once. After that, plain <code>ssh &lt;name&gt;</code> works for every box you create.</p>
+                    <p>Do this once. The <code>Include</code> line must sit at the top of <code>~/.ssh/config</code> — SSH scopes it to the last <code>Host</code> block if it is appended. After that, plain <code>ssh &lt;name&gt;</code> works for every box you create. If you already appended the line, move it to the top.</p>
                     <div class="snip">
                       <pre><span class="p">$</span><code id="cmd-include">mkdir -p ~/.ssh
-grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
-  || printf '\nInclude ~/.pu-state/*/ssh_config\n' >> ~/.ssh/config</code></pre>
+touch ~/.ssh/config
+grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
+  || { { printf 'Include ~/.pu-state/*/ssh_config\n\n'; cat ~/.ssh/config; } > ~/.ssh/config.new \
+        && mv ~/.ssh/config.new ~/.ssh/config; }</code></pre>
                       <button type="button" class="copy" data-copy="#cmd-include" aria-label="Copy" title="Copy">
                         <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                         <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
@@ -430,7 +432,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
               <div>
                 <h3>Open in VS Code <span class="opt">optional</span></h3>
                 <p>Edit and debug on the box from your laptop. Install the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh">Remote - SSH</a> extension (or the <a href="https://aka.ms/vscode-remote/download/extension">Remote Development</a> pack). Microsoft’s <a href="https://code.visualstudio.com/docs/remote/ssh">SSH guide</a> and <a href="https://code.visualstudio.com/docs/remote/ssh-tutorial">tutorial</a> walk through the UI.</p>
-                <p>VS Code uses your SSH config, so do the <code>Include ~/.pu-state/*/ssh_config</code> step above once. Then in VS Code: Command Palette → <strong>Remote-SSH: Connect to Host…</strong> → pick <code>&lt;name&gt;</code> → open a folder. The workspace is the box, not your MacBook.</p>
+                <p>VS Code uses your SSH config, so do the <a href="#prefer-ssh">Prefer ssh &lt;name&gt; instead of connect</a> step once. Then in VS Code: Command Palette → <strong>Remote-SSH: Connect to Host…</strong> → pick <code>&lt;name&gt;</code> → open a folder. The workspace is the box, not your MacBook.</p>
               </div>
             </div>
           </div>
@@ -578,6 +580,20 @@ Connection closed by UNKNOWN port 65535</div>
           await copyText(button.dataset.text, button);
         });
       }
+      function openHashDetails() {
+        const id = decodeURIComponent(location.hash.slice(1));
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (el instanceof HTMLDetailsElement) el.open = true;
+      }
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("a[href^='#']");
+        if (!link) return;
+        const el = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+        if (el instanceof HTMLDetailsElement) el.open = true;
+      });
+      window.addEventListener("hashchange", openHashDetails);
+      openHashDetails();
     </script>
   </body>
 </html>
