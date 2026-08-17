@@ -1,6 +1,6 @@
 import { basename } from "node:path"
 import { Effect, Exit } from "effect"
-import { Client, type ClientError, type ClientReq, type LaunchHooks, type LaunchResult } from "../client.ts"
+import { Client, type ClientError, type ClientReq, type LaunchHooks, type LaunchResult } from "xyne-boxes"
 import { printReady, spinner } from "../ui.ts"
 
 export const cliName = (): string => {

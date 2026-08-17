@@ -1,5 +1,4 @@
-import { UsageError } from "./errors.ts"
-import { invalidBoxName } from "./names.ts"
+import { invalidBoxName, UsageError } from "xyne-boxes"
 
 export interface ConnectArgs {
   readonly name: string

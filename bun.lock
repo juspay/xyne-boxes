@@ -10,8 +10,8 @@
         "typescript": "catalog:",
       },
     },
-    "packages/client": {
-      "name": "xyne-boxes",
+    "packages/cli": {
+      "name": "xyne-boxes-cli",
       "version": "0.1.0",
       "bin": {
         "xyne-boxes": "./src/cli.ts",
@@ -19,6 +19,19 @@
       "dependencies": {
         "@effect/platform-node": "catalog:",
         "@opentui/core": "catalog:",
+        "effect": "catalog:",
+        "xyne-boxes": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/client": {
+      "name": "xyne-boxes",
+      "version": "0.1.0",
+      "dependencies": {
+        "@effect/platform-node": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -162,6 +175,8 @@
     "ws": ["ws@8.21.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw=="],
 
     "xyne-boxes": ["xyne-boxes@workspace:packages/client"],
+
+    "xyne-boxes-cli": ["xyne-boxes-cli@workspace:packages/cli"],
 
     "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
   }

@@ -16,6 +16,7 @@ let
       ./bun.nix
       ./tsconfig.json
       ./packages/client
+      ./packages/cli
     ];
   };
 
@@ -43,7 +44,7 @@ let
     ];
     startScript = ''
       export XYNE_COMMIT=${lib.escapeShellArg gitRev}
-      bun packages/client/src/cli.ts "$@"
+      bun packages/cli/src/cli.ts "$@"
     '';
     postInstall = ''
       ln -s xyne-boxes "$out/bin/pu"
@@ -72,10 +73,11 @@ in
 {
   inherit xyne-boxes;
   tests = bunCheck "tests" ''
-    bun test ./packages/client
+    bun test ./packages/client ./packages/cli
   '';
   typecheck = bunCheck "typecheck" ''
     bunx tsc --noEmit -p packages/client
+    bunx tsc --noEmit -p packages/cli
   '';
   installer-test = pkgs.stdenv.mkDerivation {
     pname = "xyne-boxes-installer-test";

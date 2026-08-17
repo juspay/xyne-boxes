@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "start": "bun packages/client/src/cli.ts",
-    "typecheck": "tsc --noEmit -p packages/client",
-    "test": "bun test ./packages/client",
+    "start": "bun packages/cli/src/cli.ts",
+    "typecheck": "tsc --noEmit -p packages/client && tsc --noEmit -p packages/cli",
+    "test": "bun test ./packages/client ./packages/cli",
     "postinstall": "bun2nix -o bun.nix"
   },
   "devDependencies": {

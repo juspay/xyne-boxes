@@ -258,6 +258,7 @@
     hash = "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==";
   };
   "xyne-boxes" = copyPathToStore ./packages/client;
+  "xyne-boxes-cli" = copyPathToStore ./packages/cli;
   "yaml@2.9.0" = fetchurl {
     url = "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz";
     hash = "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==";

@@ -17,4 +17,7 @@ export {
 export type { Auth, AuthHooks } from "./auth.ts"
 export { sshArgv, type SshConfig } from "./ssh.ts"
 export { AuthError, CommandFailed, MissingTool, UsageError } from "./errors.ts"
-export { parseConnectArgs, type ConnectArgs } from "./connect-args.ts"
+export { parseList, type ListRow } from "./list.ts"
+export { invalidBoxName } from "./names.ts"
+export { resolveStep } from "./tools.ts"
+export { waitExitCode } from "./process.ts"

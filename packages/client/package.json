@@ -1,7 +1,7 @@
 {
   "name": "xyne-boxes",
   "version": "0.1.0",
-  "description": "TypeScript client and CLI for xyne-boxes",
+  "description": "Effect library for xyne-boxes",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -11,21 +11,16 @@
       "default": "./src/index.ts"
     }
   },
-  "bin": {
-    "xyne-boxes": "./src/cli.ts"
-  },
   "files": [
     "src",
     "tsconfig.json"
   ],
   "scripts": {
-    "start": "bun src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
-    "@opentui/core": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

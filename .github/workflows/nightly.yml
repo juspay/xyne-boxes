@@ -41,17 +41,18 @@ jobs:
 
       - name: Test and typecheck
         run: |
-          bun test ./packages/client
+          bun test ./packages/client ./packages/cli
           bunx tsc --noEmit -p packages/client
+          bunx tsc --noEmit -p packages/cli
           chmod +x installer/install.test.sh installer/fetch-step.test.sh
           sh installer/install.test.sh
           sh installer/fetch-step.test.sh
 
       - name: Stamp commit into the binary
-        run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/client/src/commit.ts
+        run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/cli/src/commit.ts
 
       - name: Compile
-        run: bun build --compile --outfile "${{ matrix.asset }}" packages/client/src/cli.ts
+        run: bun build --compile --outfile "${{ matrix.asset }}" packages/cli/src/cli.ts
 
       - name: Smoke the binary
         run: |

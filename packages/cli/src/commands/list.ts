@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { Command } from "effect/unstable/cli"
-import { parseList } from "../list.ts"
+import { parseList } from "xyne-boxes"
 import { printList } from "../ui.ts"
 import { makeClient } from "./shared.ts"
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { CliError } from "effect/unstable/cli"
-import { AuthError, CommandFailed } from "./errors.ts"
+import { AuthError, CommandFailed } from "xyne-boxes"
 import { describeError, helpText, plainText } from "./ui.ts"
 
 describe("helpText", () => {

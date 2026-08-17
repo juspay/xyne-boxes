@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { parseConnectArgs } from "./connect-args.ts"
-import { UsageError } from "./errors.ts"
+import { UsageError } from "xyne-boxes"
 
 describe("parseConnectArgs", () => {
   test("requires a name", () => {

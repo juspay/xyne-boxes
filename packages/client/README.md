@@ -9,7 +9,7 @@ flowchart TB
   ext["External TypeScript app"]
   term["Terminal / nix run"]
 
-  subgraph lib ["Library — src/index.ts"]
+  subgraph lib ["Library — packages/client"]
     Client["Client.create / fork / list / destroy / sshConfig"]
     auth["ensureAuth"]
     sshmod["ssh.ts — control-plane ssh, ssh_config, proxy"]
@@ -17,7 +17,7 @@ flowchart TB
     Client --> sshmod
   end
 
-  subgraph cli ["CLI"]
+  subgraph cli ["CLI — packages/cli"]
     entry["cli.ts"]
     root["commands/root.ts — Effect CLI"]
     cmds["create · fork · list · destroy · connect · version · help"]
@@ -82,4 +82,4 @@ Errors are tagged: `UsageError`, `AuthError`, `MissingTool`, `CommandFailed`.
 nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- <command>
 ```
 
-`create`, `connect`, `list`, `fork`, `destroy`, `version`, `help`. Parsed with Effect CLI (`effect/unstable/cli`); command handlers live in `src/commands/`. Nix wraps bun, openssh, and step-cli. See the [usage guide](https://juspay.github.io/xyne-boxes/).
+`create`, `connect`, `list`, `fork`, `destroy`, `version`, `help`. Parsed with Effect CLI (`effect/unstable/cli`); command handlers live in [`packages/cli`](../cli/). Nix wraps bun, openssh, and step-cli. See the [usage guide](https://juspay.github.io/xyne-boxes/).

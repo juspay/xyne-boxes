@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process"
 import { Effect } from "effect"
 import { Command } from "effect/unstable/cli"
 import { commitLabel, packageVersion } from "../build-info.ts"
-import { resolveStep } from "../tools.ts"
+import { resolveStep } from "xyne-boxes"
 import { printVersion } from "../ui.ts"
 
 const firstLine = (text: string, fallback: string): string => {

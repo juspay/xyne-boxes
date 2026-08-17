@@ -1,10 +1,8 @@
 import { Effect } from "effect"
 import { Argument, Command } from "effect/unstable/cli"
 import { ChildProcess } from "effect/unstable/process"
+import { sshArgv, UsageError, waitExitCode } from "xyne-boxes"
 import { parseConnectArgs } from "../connect-args.ts"
-import { UsageError } from "../errors.ts"
-import { waitExitCode } from "../process.ts"
-import { sshArgv } from "../ssh.ts"
 import { printConnecting, spinner } from "../ui.ts"
 import { cliName, makeClient } from "./shared.ts"
 

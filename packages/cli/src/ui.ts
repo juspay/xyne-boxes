@@ -7,8 +7,7 @@ import {
 import type { TextChunk } from "@opentui/core"
 import { TextAttributes } from "@opentui/core"
 import { CliError } from "effect/unstable/cli"
-import { AuthError, CommandFailed, MissingTool, UsageError } from "./errors.ts"
-import type { ListRow } from "./list.ts"
+import { AuthError, CommandFailed, MissingTool, UsageError, type ListRow } from "xyne-boxes"
 
 const gold = fg("#e8a317")
 const ok = fg("#6fcf8e")
