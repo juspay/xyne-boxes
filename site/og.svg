@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="xyne-boxes — get a box">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="xyne-boxes — a Linux box faster than your MacBook">
   <rect width="1200" height="630" fill="#0b0b0b"/>
   <text x="72" y="120" font-family="Newsreader, Times New Roman, serif" font-size="36" font-weight="600" fill="#f4f4f4">xyne-boxes</text>
-  <text x="72" y="340" font-family="Newsreader, Times New Roman, serif" font-size="88" font-weight="600" fill="#ffffff">Get a box.</text>
+  <text x="72" y="300" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#ffffff">A Linux box faster</text>
+  <text x="72" y="380" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#ffffff">than your MacBook.</text>
   <text x="72" y="540" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#bdbdbd">JUSPAY · INCUS · TAILSCALE</text>
   <text x="1128" y="540" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#9ec1ff">github.com/juspay/xyne-boxes</text>
 </svg>

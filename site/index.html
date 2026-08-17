@@ -3,19 +3,19 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>xyne-boxes — remote dev boxes, one SSH away</title>
-    <meta name="description" content="Spin up an Incus-backed Linux dev box and SSH straight in. One command creates it, Tailscale gets you on the network, and short-lived SSH certificates handle the rest.">
+    <title>xyne-boxes — a Linux box faster than your MacBook</title>
+    <meta name="description" content="Remote Incus Linux workstations for Juspay: warm Nix store, pre-cached envs, SSH in. Built for work that crawls on a laptop.">
     <link rel="canonical" href="https://juspay.github.io/xyne-boxes/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="xyne-boxes">
-    <meta property="og:title" content="xyne-boxes — remote dev boxes, one SSH away">
-    <meta property="og:description" content="Spin up an Incus-backed Linux dev box and SSH straight in. One command creates it, Tailscale gets you on the network, and short-lived SSH certificates handle the rest.">
+    <meta property="og:title" content="xyne-boxes — a Linux box faster than your MacBook">
+    <meta property="og:description" content="Remote Incus Linux workstations for Juspay: warm Nix store, pre-cached envs, SSH in. Built for work that crawls on a laptop.">
     <meta property="og:url" content="https://juspay.github.io/xyne-boxes/">
     <meta property="og:image" content="https://juspay.github.io/xyne-boxes/og.svg">
-    <meta property="og:image:alt" content="xyne-boxes — get a remote Linux box">
+    <meta property="og:image:alt" content="xyne-boxes — a Linux box faster than your MacBook">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="xyne-boxes — remote dev boxes, one SSH away">
-    <meta name="twitter:description" content="Spin up an Incus-backed Linux dev box and SSH straight in.">
+    <meta name="twitter:title" content="xyne-boxes — a Linux box faster than your MacBook">
+    <meta name="twitter:description" content="Remote Incus Linux workstations for Juspay. Warm Nix, pre-cached envs, SSH in.">
     <meta name="twitter:image" content="https://juspay.github.io/xyne-boxes/og.svg">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -263,10 +263,10 @@
     <a class="skip" href="#machine">Skip to setup</a>
     <div class="shell">
       <aside class="rail">
-        <a class="brand" href="#">xyne-boxes<small>remote linux · ssh certs</small></a>
+        <a class="brand" href="#">xyne-boxes<small>faster than your macbook</small></a>
         <nav aria-label="Manual">
           <a href="#machine">This machine</a>
-          <a href="#daily">Get a box</a>
+          <a href="#daily">Create</a>
           <a href="#cli">Command list</a>
           <a href="#inside">Inside</a>
           <a href="#broke">If it breaks</a>
@@ -280,8 +280,8 @@
       <main class="page">
         <header class="mast">
           <p class="meta">Juspay · Incus · Tailscale</p>
-          <h1>Get a box.</h1>
-          <p class="deck">A fresh Linux environment you SSH into. Certificates last about a week. You never copy keys onto the machine.</p>
+          <h1>A Linux box faster than your MacBook.</h1>
+          <p class="deck">Remote Incus machines with a warm Nix store and pre-cached Juspay envs — for builds and shells that crawl on a laptop. SSH in. Certs last about a week; you never copy keys onto the box.</p>
           <div class="pair">
             <div class="run">
               <div>
@@ -488,7 +488,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
             </div>
             <div class="fact">
               <h3>Warm Nix</h3>
-              <p>Flakes are on and the box shares the host’s <code>/nix/store</code>. Common Juspay dev-envs are pre-cached.</p>
+              <p>Flakes are on and the box shares the host’s <code>/nix/store</code>. Common Juspay dev-envs are pre-cached, so shells and builds start warm — that’s why this beats a fresh MacBook.</p>
             </div>
             <div class="fact">
               <h3>Your home persists</h3>
