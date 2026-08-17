@@ -260,13 +260,13 @@
     </style>
   </head>
   <body>
-    <a class="skip" href="#daily">Skip to create</a>
+    <a class="skip" href="#machine">Skip to setup</a>
     <div class="shell">
       <aside class="rail">
         <a class="brand" href="#">xyne-boxes<small>remote linux · ssh certs</small></a>
         <nav aria-label="Manual">
-          <a href="#daily">Get a box</a>
           <a href="#machine">This machine</a>
+          <a href="#daily">Get a box</a>
           <a href="#cli">Command list</a>
           <a href="#inside">Inside</a>
           <a href="#broke">If it breaks</a>
@@ -298,8 +298,59 @@
           </div>
         </header>
 
+        <article id="machine">
+          <p class="label">01 · Once per machine</p>
+          <h2>Prepare this laptop</h2>
+          <p class="lede">Nix runs the CLI. Tailscale puts you on the private network. After this, creating a box is the two commands in the next section.</p>
+          <div class="runbook">
+            <div class="row">
+              <div class="n">01</div>
+              <div>
+                <h3>Install Nix</h3>
+                <p>xyne-boxes runs entirely through Nix. If you do not have it yet, install it with <a href="https://juspay.github.io/nixone/">nixone</a>.</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="n">02</div>
+              <div>
+                <h3>Install Tailscale</h3>
+                <p>You need the Tailscale CLI so you can join the Juspay network. On macOS, install it from the <a href="https://apps.apple.com/ca/app/tailscale/id1475387142?mt=12">Mac App Store</a>. On Linux, use the <a href="https://tailscale.com/download/linux">official Linux packages</a> or your distro’s Tailscale module. <code>tailscale --help</code> should print something.</p>
+                <details class="note">
+                  <summary>macOS: CLI missing after the App Store install</summary>
+                  <div class="body">
+                    <p>The App Store build does not always put the CLI on your <code>PATH</code>. Paste this once:</p>
+                    <div class="snip">
+                      <pre><span class="p">$</span><code id="cmd-wrapper">mkdir -p /usr/local/bin
+printf '#!/bin/sh\nexec /Applications/Tailscale.app/Contents/MacOS/Tailscale "$@"\n' > /usr/local/bin/tailscale
+chmod +x /usr/local/bin/tailscale</code></pre>
+                      <button type="button" class="copy" data-copy="#cmd-wrapper" aria-label="Copy" title="Copy">
+                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div class="row">
+              <div class="n">03</div>
+              <div>
+                <h3>Join the network</h3>
+                <p>This opens a browser so you can sign in.</p>
+                <div class="snip">
+                  <pre><span class="p">$</span><code id="cmd-up">sudo tailscale up --login-server=https://headscale.nixos.asia --hostname $(hostname -s)</code></pre>
+                  <button type="button" class="copy" data-copy="#cmd-up" aria-label="Copy" title="Copy">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
         <article id="daily">
-          <p class="label">01 · Every day</p>
+          <p class="label">02 · Every day</p>
           <h2>Create, then jump in</h2>
           <p class="lede">Pick a name. First command builds the box. Second drops you in as <code>toor</code>.</p>
           <div class="runbook">
@@ -362,57 +413,6 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config 2>/dev/null \
                     </div>
                   </div>
                 </details>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article id="machine">
-          <p class="label">02 · Once per machine</p>
-          <h2>Prepare this laptop</h2>
-          <p class="lede">Nix runs the CLI. Tailscale puts you on the private network. After this, creating a box is the two commands above.</p>
-          <div class="runbook">
-            <div class="row">
-              <div class="n">01</div>
-              <div>
-                <h3>Install Nix</h3>
-                <p>xyne-boxes runs entirely through Nix. If you do not have it yet, install it with <a href="https://juspay.github.io/nixone/">nixone</a>.</p>
-              </div>
-            </div>
-            <div class="row">
-              <div class="n">02</div>
-              <div>
-                <h3>Install Tailscale</h3>
-                <p>You need the Tailscale CLI so you can join the Juspay network. On macOS, install it from the <a href="https://apps.apple.com/ca/app/tailscale/id1475387142?mt=12">Mac App Store</a>. On Linux, use the <a href="https://tailscale.com/download/linux">official Linux packages</a> or your distro’s Tailscale module. <code>tailscale --help</code> should print something.</p>
-                <details class="note">
-                  <summary>macOS: CLI missing after the App Store install</summary>
-                  <div class="body">
-                    <p>The App Store build does not always put the CLI on your <code>PATH</code>. Paste this once:</p>
-                    <div class="snip">
-                      <pre><span class="p">$</span><code id="cmd-wrapper">mkdir -p /usr/local/bin
-printf '#!/bin/sh\nexec /Applications/Tailscale.app/Contents/MacOS/Tailscale "$@"\n' > /usr/local/bin/tailscale
-chmod +x /usr/local/bin/tailscale</code></pre>
-                      <button type="button" class="copy" data-copy="#cmd-wrapper" aria-label="Copy" title="Copy">
-                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-            <div class="row">
-              <div class="n">03</div>
-              <div>
-                <h3>Join the network</h3>
-                <p>This opens a browser so you can sign in.</p>
-                <div class="snip">
-                  <pre><span class="p">$</span><code id="cmd-up">sudo tailscale up --login-server=https://headscale.nixos.asia --hostname $(hostname -s)</code></pre>
-                  <button type="button" class="copy" data-copy="#cmd-up" aria-label="Copy" title="Copy">
-                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
