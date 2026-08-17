@@ -24,8 +24,8 @@ jobs:
         include:
           - os: macos-latest
             asset: xyne-boxes-darwin-arm64
-          - os: macos-13
-            asset: xyne-boxes-darwin-x64
+          - os: ubuntu-latest
+            asset: xyne-boxes-linux-x64
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -95,12 +95,12 @@ jobs:
             --target "${GITHUB_SHA}" \
             --notes "Moving nightly from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
-          macOS only. Needs \`ssh\` (system) and \`step\` on PATH.
+          Needs \`ssh\` and \`step\` on PATH.
 
           Assets:
           - \`xyne-boxes-darwin-arm64\`
-          - \`xyne-boxes-darwin-x64\`
+          - \`xyne-boxes-linux-x64\`
           - \`SHA256SUMS\`" \
             dist/xyne-boxes-darwin-arm64 \
-            dist/xyne-boxes-darwin-x64 \
+            dist/xyne-boxes-linux-x64 \
             dist/SHA256SUMS

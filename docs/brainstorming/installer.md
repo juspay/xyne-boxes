@@ -8,7 +8,7 @@ curl -fsSL https://juspay.github.io/xyne-boxes/install.sh | bash
 
 Nix `run` stays. This is for a machine that only has `curl` and Apple’s `ssh`.
 
-**v1 is macOS only** (`darwin-arm64`, `darwin-x64`). No Linux, no Windows, no Homebrew.
+**v1 platforms:** `darwin-arm64` (Apple Silicon) and `linux-x64`. No Intel Mac, no Windows, no Homebrew.
 
 ## What those installers actually do
 
@@ -31,20 +31,20 @@ xyne-boxes is the same shape, plus one extra tool (`step`).
 
 ## Compile the CLI (release assets)
 
-Done in [`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml). Native macOS runners (OpenTUI cannot be cross-compiled):
+Done in [`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml). Compile **on** the target OS — OpenTUI natives do not cross-compile (`@opentui/core-<os>-<arch>` missing).
 
 ```
-bun build --compile --outfile xyne-boxes-darwin-arm64 packages/client/src/cli.ts
+bun build --compile --outfile xyne-boxes-<platform> packages/client/src/cli.ts
 ```
 
-Local spike on linux-x64 produced a working ~129MB binary (`version` / `help` ran). Cross-compile to another OpenTUI arch failed to resolve `@opentui/core-<os>-<arch>`, so each asset is compiled **on that Mac**.
+Local linux-x64 spike: ~129MB binary, `version` / `help` ran.
 
 ### Nightly
 
 Push to `main` or `ts` (and `workflow_dispatch`) force-updates the moving `nightly` tag and the **Nightly** prerelease:
 
 - `xyne-boxes-darwin-arm64`
-- `xyne-boxes-darwin-x64`
+- `xyne-boxes-linux-x64`
 - `SHA256SUMS`
 
 `ts` publishes to the same tag so we can test the workflow before merge. Last push wins.
@@ -55,11 +55,11 @@ Push to `main` or `ts` (and `workflow_dispatch`) force-updates the moving `night
 
 Not on the website yet. When we add it:
 
-- Detect `uname -s` / `uname -m` (Darwin only)
+- Detect `uname -s` / `uname -m` (`arm64` Darwin, `x86_64` Linux)
 - Download the matching `nightly` (or tagged) asset
 - Install to `~/.local/bin/xyne-boxes` (and `pu` symlink)
-- If `step` is missing, download Smallstep’s official Darwin binary into the same dir — or wait for [step-ts](step-ts.md)
-- Append `~/.local/bin` to `PATH` in `.zshrc` if needed
+- If `step` is missing, download Smallstep’s official binary into the same dir — or wait for [step-ts](step-ts.md)
+- Append `~/.local/bin` to `PATH` if needed
 - Run `xyne-boxes version`
 
 No root.
@@ -71,7 +71,7 @@ No root.
 ## Skip
 
 - Homebrew
-- Linux / Windows
+- Intel Mac / Windows / other Linux arches
 - npm global
 - [Reimplementing `step` in TypeScript](step-ts.md) until shipping `step` hurts
 - Self-update command (`install.sh` again)
