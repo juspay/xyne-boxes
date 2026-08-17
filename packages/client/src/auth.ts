@@ -1,0 +1,152 @@
+import { Effect, FileSystem } from "effect"
+import type { PlatformError } from "effect/PlatformError"
+import { type ResolvedConfig, identityPaths, MAC_OPT } from "./config.ts"
+import { AuthError, CommandFailed, MissingTool } from "./errors.ts"
+import { runExitCode, runOk, type ProcessReq } from "./process.ts"
+
+export interface AuthHooks {
+  readonly onSigning?: () => void
+}
+
+export interface Auth {
+  readonly useSshCa: boolean
+  readonly identityFile: string | undefined
+  readonly certificateFile: string | undefined
+  /** ssh args for the control plane (`pu@host`). */
+  readonly sshArgs: ReadonlyArray<string>
+  /** ssh args for an instance hop (no known-hosts file). */
+  readonly instanceSshArgs: ReadonlyArray<string>
+}
+
+const macArgs = ["-o", MAC_OPT] as const
+
+export const stepEnv = (
+  config: ResolvedConfig,
+): Record<string, string> => ({
+  STEP_FINGERPRINT: config.stepFingerprint,
+  STEP_CA_URL: config.stepCaUrl,
+})
+
+const requireStep = Effect.gen(function* () {
+  const code = yield* runExitCode("step", ["version"], {
+    stdout: "ignore",
+    stderr: "ignore",
+  }).pipe(Effect.orElseSucceed(() => 127))
+  if (code !== 0) {
+    return yield* new MissingTool({
+      tool: "step",
+      hint:
+        "nix run github:juspay/xyne-boxes ships step-cli, openssh, and bun. If you imported the library directly, put step on PATH.",
+    })
+  }
+})
+
+export const ensureAuth = (
+  config: ResolvedConfig,
+  hooks: AuthHooks = {},
+): Effect.Effect<
+  Auth,
+  AuthError | MissingTool | CommandFailed | PlatformError,
+  ProcessReq | FileSystem.FileSystem
+> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    yield* fs.makeDirectory(config.stateDir, { recursive: true })
+
+    if (!config.useSshCa) {
+      return {
+        useSshCa: false,
+        identityFile: undefined,
+        certificateFile: undefined,
+        sshArgs: [...macArgs, "-o", "StrictHostKeyChecking=no"],
+        instanceSshArgs: [...macArgs],
+      }
+    }
+
+    yield* requireStep
+
+    const paths = identityPaths(config.stateDir)
+    const env = stepEnv(config)
+
+    if (!(yield* fs.exists(paths.key))) {
+      yield* runOk("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-f", paths.key])
+    }
+
+    const healthy = yield* runExitCode("step", ["ca", "health"], {
+      env,
+      stdout: "ignore",
+      stderr: "ignore",
+    }).pipe(Effect.orElseSucceed(() => 1))
+    if (healthy !== 0) {
+      yield* runOk("step", ["ca", "bootstrap", "--force"], { env })
+    }
+
+    const certOk = yield* fs.exists(paths.cert)
+    const provisioner = certOk
+      ? (yield* fs.exists(paths.provisionerFile))
+        ? (yield* fs.readFileString(paths.provisionerFile)).trim()
+        : ""
+      : ""
+    const needsRenewal =
+      !certOk ||
+      provisioner !== config.provisioner ||
+      (yield* runExitCode("step", [
+        "ssh",
+        "needs-renewal",
+        paths.cert,
+        "--expires-in",
+        "75%",
+      ], {
+        env,
+        stdout: "ignore",
+        stderr: "ignore",
+      }).pipe(Effect.orElseSucceed(() => 1))) === 0
+
+    if (needsRenewal) {
+      hooks.onSigning?.()
+      const signed = yield* runExitCode("step", [
+        "ssh",
+        "certificate",
+        "--force",
+        "--no-agent",
+        "--no-password",
+        "--insecure",
+        "--provisioner",
+        config.provisioner,
+        "--console",
+        "me",
+        paths.key,
+      ], { env, stdout: "inherit", stderr: "inherit" })
+      if (signed !== 0) {
+        return yield* new AuthError({
+          message: `Could not sign an SSH certificate (step exited ${signed}).`,
+          hint: "Open the printed link, enter the code, and sign in with your Juspay Google account.",
+        })
+      }
+      yield* fs.writeFileString(paths.provisionerFile, `${config.provisioner}\n`)
+    }
+
+    const identityArgs = [
+      "-i",
+      paths.key,
+      "-o",
+      `CertificateFile=${paths.cert}`,
+      "-o",
+      "IdentitiesOnly=yes",
+    ] as const
+
+    return {
+      useSshCa: true,
+      identityFile: paths.key,
+      certificateFile: paths.cert,
+      sshArgs: [
+        ...macArgs,
+        ...identityArgs,
+        "-o",
+        `UserKnownHostsFile=${paths.knownHosts}`,
+        "-o",
+        "StrictHostKeyChecking=accept-new",
+      ],
+      instanceSshArgs: [...macArgs, ...identityArgs],
+    }
+  })

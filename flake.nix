@@ -1,33 +1,54 @@
 {
   inputs.nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
+  inputs.bun2nix.url = "github:nix-community/bun2nix/2.1.2";
+  inputs.bun2nix.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs }:
+  nixConfig = {
+    extra-substituters = [ "https://nix-community.cachix.org" ];
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
+
+  outputs =
+    { nixpkgs, bun2nix, ... }:
     let
-      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
       eachSystem = nixpkgs.lib.genAttrs systems;
+      pkgsFor =
+        system:
+        import nixpkgs {
+          inherit system;
+          overlays = [ bun2nix.overlays.default ];
+        };
     in
     {
-      packages = eachSystem (system:
+      packages = eachSystem (system: {
+        default = (pkgsFor system).callPackage ./default.nix { };
+        bun2nix = (pkgsFor system).bun2nix;
+      });
+
+      devShells = eachSystem (
+        system:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
+          pkgs = pkgsFor system;
         in
         {
-          default = pkgs.writeShellApplication {
-            name = "xyne-boxes";
-            runtimeInputs = with pkgs; [
-              openssh
-              step-cli
+          default = pkgs.mkShell {
+            packages = [
+              pkgs.bun
+              pkgs.bun2nix
+              pkgs.openssh
+              pkgs.step-cli
+              pkgs.nixpkgs-fmt
             ];
-            text = builtins.readFile ./pu/pu-client.sh;
-            meta = {
-              description = "CLI for xyne-boxes";
-              mainProgram = "xyne-boxes";
-            };
-            derivationArgs.postCheck = ''
-              # Backwards compatibility for users with the old CLI name.
-              ln -s xyne-boxes "$out/bin/pu"
-            '';
           };
-        });
+        }
+      );
     };
 }

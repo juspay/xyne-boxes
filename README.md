@@ -28,7 +28,26 @@ nix run https://github.com/juspay/xyne-boxes/archive/main.zip <command>
 | `connect <name>` | SSH into a box |
 | `destroy <name> [name ...]` | Destroy one or more boxes |
 | `list` | List your boxes |
-| `version` | Print `bash`, `ssh`, and `step-cli` versions |
+| `version` | Print package, bun, ssh, and step-cli versions |
+
+`nix run` ships **bun**, **openssh**, and **step-cli**. A new machine only needs [Nix](https://juspay.github.io/nixone/).
+
+## Library
+
+```ts
+import { Client } from "xyne-boxes"
+import { Effect } from "effect"
+import { NodeServices } from "@effect/platform-node"
+
+const program = Effect.gen(function* () {
+  const client = yield* Client.make()
+  const listed = yield* client.list()
+  const ssh = yield* client.sshConfig("mybox")
+  return { listed, ssh }
+}).pipe(Effect.provide(NodeServices.layer))
+```
+
+`Client.connect` is CLI-only. The library returns SSH config; the caller runs `ssh`.
 
 ## Support
 
