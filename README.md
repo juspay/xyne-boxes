@@ -15,10 +15,17 @@
 Everything you need to create and access a box lives on the
 **[website](https://juspay.github.io/xyne-boxes/)**.
 
+On a pristine Mac (Apple Silicon) or Linux x86_64, no Nix:
+
+```
+curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+```
+
 ## Commands
 
 ```
 nix run https://github.com/juspay/xyne-boxes/archive/main.zip <command>
+xyne-boxes <command>   # after the curl installer
 ```
 
 | Command | Description |
@@ -47,7 +54,7 @@ const program = Effect.gen(function* () {
 }).pipe(Effect.provide(NodeServices.layer))
 ```
 
-`Client.connect` is CLI-only. The library returns SSH config; the caller runs `ssh`.
+Connecting is CLI-only (`xyne-boxes connect`). The library returns SSH config; the caller runs `ssh`.
 
 ## Support
 

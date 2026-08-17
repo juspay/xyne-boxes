@@ -32,8 +32,9 @@ shift
           cat >&2 <<MESSAGE
 xyne-boxes: SSH authentication failed. Your certificate may have expired.
 
-Renew it by running:
+Renew it by connecting again:
   xyne-boxes connect $name
+  nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- connect $name
 MESSAGE
         fi
         ;;
@@ -146,9 +147,11 @@ export function sshArgv(
     readonly remoteCmd?: ReadonlyArray<string>
   } = {},
 ): ReadonlyArray<string> {
+  // User -o flags first: ssh keeps the first value per keyword, matching
+  // the bash client (instance opts, user args, then ProxyCommand / host-key).
   return [
-    ...config.sshArgs,
     ...(options.sshArgs ?? []),
+    ...config.sshArgs,
     "-l",
     config.user,
     "--",

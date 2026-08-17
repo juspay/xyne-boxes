@@ -45,9 +45,9 @@ describe("formatSshConfigFile", () => {
 })
 
 describe("SSH_PROXY_SCRIPT", () => {
-  test("renews with the installed CLI, not nix run", () => {
+  test("renew hint names both the installed CLI and nix run", () => {
     expect(SSH_PROXY_SCRIPT).toContain("xyne-boxes connect $name")
-    expect(SSH_PROXY_SCRIPT).not.toContain("nix run")
+    expect(SSH_PROXY_SCRIPT).toContain("nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- connect $name")
   })
 })
 
@@ -57,7 +57,7 @@ describe("sshArgv", () => {
     user: "toor",
     configPath: "/tmp/ssh_config",
     proxyCommand: "proxy",
-    sshArgs: ["-o", "ForwardAgent=yes"],
+    sshArgs: ["-o", "ForwardAgent=yes", "-o", "StrictHostKeyChecking=no"],
     destination: "mybox",
   }
 
@@ -65,12 +65,26 @@ describe("sshArgv", () => {
     expect(sshArgv(config, { remoteCmd: ["uname", "-a"] })).toEqual([
       "-o",
       "ForwardAgent=yes",
+      "-o",
+      "StrictHostKeyChecking=no",
       "-l",
       "toor",
       "--",
       "mybox",
       "uname",
       "-a",
+    ])
+  })
+
+  test("user -o flags precede the client's so ssh keeps the user's value", () => {
+    const argv = sshArgv(config, { sshArgs: ["-o", "StrictHostKeyChecking=yes"] })
+    expect(argv.slice(0, 6)).toEqual([
+      "-o",
+      "StrictHostKeyChecking=yes",
+      "-o",
+      "ForwardAgent=yes",
+      "-o",
+      "StrictHostKeyChecking=no",
     ])
   })
 })

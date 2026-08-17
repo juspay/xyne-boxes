@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      # Drop `ts` when this PR merges — it only exists so the branch can dogfood the installer.
       - ts
   workflow_dispatch:
 
@@ -104,16 +105,7 @@ jobs:
           else
             TAG="nightly-${GITHUB_REF_NAME}"
           fi
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release delete "$TAG" --yes
-          fi
-          git tag -f "$TAG" "${GITHUB_SHA}"
-          git push -f origin "refs/tags/${TAG}"
-          gh release create "$TAG" \
-            --prerelease \
-            --title "Nightly (${GITHUB_REF_NAME})" \
-            --target "${GITHUB_SHA}" \
-            --notes "Moving \`${TAG}\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
+          NOTES="Moving \`${TAG}\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
           Pristine macOS (Apple Silicon) and Linux x86_64:
 
@@ -121,11 +113,19 @@ jobs:
           curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/${TAG}/install.sh | sh
           \`\`\`
 
-          \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required." \
-            dist/xyne-boxes-darwin-arm64 \
-            dist/xyne-boxes-linux-x64 \
-            dist/step-darwin-arm64 \
-            dist/step-linux-x64 \
-            dist/install.sh \
-            dist/COMMIT \
-            dist/SHA256SUMS
+          \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required."
+          git tag -f "$TAG" "${GITHUB_SHA}"
+          git push -f origin "refs/tags/${TAG}"
+          assets="dist/xyne-boxes-darwin-arm64 dist/xyne-boxes-linux-x64 dist/step-darwin-arm64 dist/step-linux-x64 dist/install.sh dist/COMMIT dist/SHA256SUMS"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Do not delete-then-recreate: a cancelled run would 404 the curl | sh URL.
+            gh release upload "$TAG" $assets --clobber
+            gh release edit "$TAG" --prerelease --title "Nightly (${GITHUB_REF_NAME})" --notes "$NOTES"
+          else
+            gh release create "$TAG" \
+              --prerelease \
+              --title "Nightly (${GITHUB_REF_NAME})" \
+              --target "${GITHUB_SHA}" \
+              --notes "$NOTES" \
+              $assets
+          fi

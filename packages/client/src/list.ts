@@ -27,7 +27,7 @@ export function parseList(raw: string): ReadonlyArray<ListRow> {
     const cols = columnsOf(trimmed)
     const name = cols[0]
     if (name === undefined) continue
-    if (/^name$/i.test(name)) continue
+    if (/^name$/i.test(name) && /^location$/i.test(cols[1] ?? "")) continue
     rows.push({
       name,
       location: cols[1],

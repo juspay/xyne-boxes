@@ -311,13 +311,20 @@
         <article id="machine">
           <p class="label">01 · Once per machine</p>
           <h2>Prepare your laptop</h2>
-          <p class="lede">Nix runs the CLI. Tailscale puts you on the private network. After this, creating a box is the two commands in the next section.</p>
+          <p class="lede">Install the CLI with Nix or with the curl installer. Tailscale puts you on the private network. After this, creating a box is the two commands in the next section.</p>
           <div class="runbook">
             <div class="row">
               <div class="n">01</div>
               <div>
-                <h3>Install Nix</h3>
-                <p>xyne-boxes runs entirely through Nix. If you do not have it yet, install it with <a href="https://juspay.github.io/nixone/">nixone</a>.</p>
+                <h3>Install the CLI</h3>
+                <p>Either <a href="https://juspay.github.io/nixone/">install Nix</a> and use <code>nix run</code> below, or on a pristine Mac (Apple Silicon) or Linux x86_64 skip Nix:</p>
+                <div class="snip">
+                  <pre><span class="p">$</span><code id="cmd-curl">curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh</code></pre>
+                  <button type="button" class="copy" data-copy="#cmd-curl" aria-label="Copy" title="Copy">
+                    <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                    <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="row">
@@ -441,7 +448,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
         <article id="cli">
           <p class="label">03 · Reference</p>
           <h2>Every command</h2>
-          <p class="lede">Prefix is always <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. Copy pastes the full line.</p>
+          <p class="lede">With Nix, prefix is <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. After the curl installer, the command is just <code>xyne-boxes</code>. Copy pastes the Nix form.</p>
           <table class="cli">
             <thead><tr><th>Command</th><th>Does</th></tr></thead>
             <tbody>
@@ -491,7 +498,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
-                <td>Print package, bun, ssh, and step-cli versions</td>
+                <td>Print package, commit, bun, ssh, and step-cli versions</td>
               </tr>
             </tbody>
           </table>

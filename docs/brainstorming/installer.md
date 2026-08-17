@@ -15,7 +15,7 @@ Implementation lives in [`installer/`](../../installer/). Nix `run` stays as the
 | `xyne-boxes` / `pu` | Compiled nightly asset in `~/.local/bin` |
 | `step` | Official Smallstep binary, same directory (pristine machines do not have it) |
 | OpenSSH | Already on the OS — not bundled |
-| bash | `/bin/bash` / `/bin/sh` |
+| bash | `/bin/bash` (the ssh-proxy uses process substitution; `/bin/sh` is not enough) |
 
 `ensureAuth()` still shells out to `step`. The compiled CLI looks next to itself, then `XYNE_STEP`, then PATH.
 

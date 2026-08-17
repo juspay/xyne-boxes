@@ -12,6 +12,12 @@ COMMIT="${XYNE_BOXES_COMMIT:-__XYNE_COMMIT__}"
 
 os=$(uname -s)
 arch=$(uname -m)
+# Rosetta reports x86_64 on Apple Silicon; the binary we ship is arm64.
+if [ "$os" = Darwin ] && [ "$arch" = x86_64 ]; then
+  if [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || true)" = "1" ]; then
+    arch=arm64
+  fi
+fi
 case "${os}-${arch}" in
   Darwin-arm64)
     boxes_asset="xyne-boxes-darwin-arm64"
@@ -36,7 +42,7 @@ need() {
 }
 
 need curl
-need uname
+need bash
 
 digest() {
   if command -v sha256sum >/dev/null 2>&1; then
@@ -64,7 +70,6 @@ fetch() {
 
 install_asset() {
   _asset=$1
-  _final=$2
   _tmp="$work/$_asset"
   fetch "$RELEASE_URL/$_asset" "$_tmp"
   want=$(expected_hash "$work/SHA256SUMS" "$_asset")
@@ -79,8 +84,6 @@ install_asset() {
     echo "xyne-boxes: got      $got" >&2
     exit 1
   fi
-  chmod 755 "$_tmp"
-  mv -f "$_tmp" "$_final"
 }
 
 if [ "$COMMIT" = "__XYNE_COMMIT__" ] || [ -z "$COMMIT" ]; then
@@ -93,16 +96,26 @@ else
 fi
 
 mkdir -p "$BIN_DIR"
+if [ ! -w "$BIN_DIR" ]; then
+  echo "xyne-boxes: cannot write to $BIN_DIR" >&2
+  exit 1
+fi
+if [ -e "$BIN_DIR/pu" ] && { [ ! -L "$BIN_DIR/pu" ] || [ "$(readlink "$BIN_DIR/pu")" != "xyne-boxes" ]; }; then
+  echo "xyne-boxes: $BIN_DIR/pu exists and is not our symlink — not overwriting" >&2
+  exit 1
+fi
 work=$(mktemp -d "${BIN_DIR}/.xyne-work.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
 echo "xyne-boxes: installing into $BIN_DIR" >&2
 fetch "$RELEASE_URL/SHA256SUMS" "$work/SHA256SUMS"
-install_asset "$boxes_asset" "$BIN_DIR/xyne-boxes"
-ln -sfn xyne-boxes "$BIN_DIR/pu"
-
+install_asset "$boxes_asset"
 echo "xyne-boxes: also installing step (pristine machines have none)" >&2
-install_asset "$step_asset" "$BIN_DIR/step"
+install_asset "$step_asset"
+chmod 755 "$work/$boxes_asset" "$work/$step_asset"
+mv -f "$work/$boxes_asset" "$BIN_DIR/xyne-boxes"
+mv -f "$work/$step_asset" "$BIN_DIR/step"
+ln -sfn xyne-boxes "$BIN_DIR/pu"
 
 append_path() {
   profile=$1

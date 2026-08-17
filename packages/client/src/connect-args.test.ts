@@ -8,6 +8,11 @@ describe("parseConnectArgs", () => {
     expect(parsed).toBeInstanceOf(UsageError)
   })
 
+  test("rejects a path-like name", () => {
+    const parsed = parseConnectArgs(["../etc"], "xyne-boxes")
+    expect(parsed).toBeInstanceOf(UsageError)
+  })
+
   test("bare connect is just the name", () => {
     expect(parseConnectArgs(["mybox"], "xyne-boxes")).toEqual({
       name: "mybox",

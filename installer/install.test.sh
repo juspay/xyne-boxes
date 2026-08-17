@@ -1,5 +1,5 @@
 #!/bin/sh
-# Local tests for install.sh: checksums, atomic replace, PATH-line match.
+# Local tests for install.sh: checksums, all-or-nothing replace, PATH-line match.
 set -eu
 
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -16,14 +16,6 @@ case "${os}-${arch}" in
     exit 1
     ;;
 esac
-
-digest() {
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$1" | awk '{print $1}'
-  else
-    shasum -a 256 "$1" | awk '{print $1}'
-  fi
-}
 
 write_sums() {
   dir=$1
@@ -64,8 +56,6 @@ export HOME="$home"
 export XYNE_BOXES_RELEASE="file://$release"
 export XYNE_BOXES_BIN="$bin"
 export XYNE_BOXES_COMMIT="deadbeef"
-# BIN_DIR is a fresh temp dir, so it is not on PATH — install.sh will
-# append the profile line. Do not shrink PATH: NixOS has no /bin/uname.
 
 sh "$here/install.sh"
 
@@ -74,18 +64,51 @@ assert test -x "$bin/step"
 assert test -L "$bin/pu"
 assert test "$(readlink "$bin/pu")" = "xyne-boxes"
 
-# Bad checksum must not replace a working install.
-printf '%s\n' '#!/bin/sh' 'echo corrupted' > "$release/$boxes"
+# Bad checksum on the *second* asset must not replace a working install
+# (a first-asset-only corrupt would miss a half-install).
+printf '%s\n' '#!/bin/sh' 'echo corrupted-step' > "$release/$step"
 if sh "$here/install.sh"; then
   echo "install.test.sh: expected checksum mismatch to fail" >&2
   exit 1
 fi
 assert test -x "$bin/xyne-boxes"
-out=$("$bin/xyne-boxes")
-assert test "$out" = "xyne-boxes test"
+assert test -x "$bin/step"
+assert test "$("$bin/xyne-boxes")" = "xyne-boxes test"
+assert test "$("$bin/step")" = "Smallstep CLI/test"
+
+# Pristine dest + bad step must leave no xyne-boxes / pu.
+fresh="$root/fresh"
+mkdir -p "$fresh"
+XYNE_BOXES_BIN="$fresh" sh "$here/install.sh" && {
+  echo "install.test.sh: expected pristine+bad-step to fail" >&2
+  exit 1
+}
+assert test ! -e "$fresh/xyne-boxes"
+assert test ! -e "$fresh/pu"
+assert test ! -e "$fresh/step"
+
+# COMMIT-file fallback (no XYNE_BOXES_COMMIT).
+make_release "$release"
+unset XYNE_BOXES_COMMIT
+commit_log="$root/commit.log"
+sh "$here/install.sh" >"$commit_log" 2>&1
+grep -q 'commit deadbeef' "$commit_log"
+export XYNE_BOXES_COMMIT="deadbeef"
+
+# Pre-existing regular file at pu is not clobbered.
+rm -f "$bin/pu"
+printf '%s\n' '#!/bin/sh' 'echo keep-me' > "$bin/pu"
+chmod 755 "$bin/pu"
+if sh "$here/install.sh"; then
+  echo "install.test.sh: expected refuse to overwrite pu" >&2
+  exit 1
+fi
+assert test ! -L "$bin/pu"
+assert test "$("$bin/pu")" = "keep-me"
+rm -f "$bin/pu"
+ln -sfn xyne-boxes "$bin/pu"
 
 # An unrelated 'xyne-boxes' mention must not skip the exact PATH line.
-make_release "$release"
 if [ "$os" = Darwin ]; then
   profile="$home/.zprofile"
 else
@@ -95,7 +118,6 @@ printf '\n# notes about xyne-boxes\n' > "$profile"
 sh "$here/install.sh"
 grep -Fqx "export PATH=\"$bin:\$PATH\"  # xyne-boxes" "$profile"
 count=$(grep -c 'xyne-boxes' "$profile")
-# comment + export line
 assert test "$count" -eq 2
 
 echo "install.test.sh: ok" >&2

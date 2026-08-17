@@ -7,6 +7,7 @@ import {
   resolveConfig,
 } from "./config.ts"
 import { AuthError, CommandFailed, MissingTool, UsageError } from "./errors.ts"
+import { invalidBoxName } from "./names.ts"
 import type { ProcessReq } from "./process.ts"
 import {
   controlSsh,
@@ -34,6 +35,12 @@ export type ClientError =
 
 export type { AuthHooks }
 
+const requireName = (name: string): Effect.Effect<string, UsageError> => {
+  const bad = invalidBoxName(name)
+  if (bad !== undefined) return new UsageError({ message: bad })
+  return Effect.succeed(name)
+}
+
 export interface LaunchHooks extends AuthHooks {
   readonly onCreating?: () => void
   readonly onWaiting?: () => void
@@ -58,7 +65,11 @@ export class Client {
     name: string,
     hooks: LaunchHooks = {},
   ): Effect.Effect<LaunchResult, ClientError, ClientReq> {
-    return this.launch(name, ["create", "base-container", name], hooks)
+    const self = this
+    return Effect.gen(function* () {
+      yield* requireName(name)
+      return yield* self.launch(name, ["create", "base-container", name], hooks)
+    })
   }
 
   fork(
@@ -66,7 +77,12 @@ export class Client {
     name: string,
     hooks: LaunchHooks = {},
   ): Effect.Effect<LaunchResult, ClientError, ClientReq> {
-    return this.launch(name, ["fork", source, name], hooks)
+    const self = this
+    return Effect.gen(function* () {
+      yield* requireName(source)
+      yield* requireName(name)
+      return yield* self.launch(name, ["fork", source, name], hooks)
+    })
   }
 
   destroy(
@@ -78,6 +94,7 @@ export class Client {
       if (names.length === 0) {
         return yield* new UsageError({ message: "destroy requires at least one name" })
       }
+      for (const name of names) yield* requireName(name)
       const auth = yield* self.ensureAuth(hooks)
       const listed = yield* controlSsh(self.config, auth, ["destroy", ...names])
       const fs = yield* FileSystem.FileSystem
@@ -102,6 +119,7 @@ export class Client {
   ): Effect.Effect<SshConfig, ClientError, ClientReq> {
     const self = this
     return Effect.gen(function* () {
+      yield* requireName(name)
       const auth = yield* self.ensureAuth(hooks)
       return yield* writeInstanceSshConfig(self.config, auth, name)
     })

@@ -65,4 +65,24 @@ exit 1
     expect(error.message).toContain("error downloading root certificate")
     expect(error.hint).toContain("Is pu reachable?")
   })
+
+  test("a present-but-broken step is not reported as missing from PATH", async () => {
+    const root = mkdtempSync(join(tmpdir(), "xyne-auth-"))
+    const step = join(root, "step")
+    writeFileSync(step, "#!/bin/sh\nexit 2\n")
+    chmodSync(step, 0o755)
+    process.env["XYNE_STEP"] = step
+    const result = await Effect.runPromise(
+      ensureAuth(resolveConfig({ host: "pu", useSshCa: true, stateDir: join(root, "state") })).pipe(
+        Effect.result,
+        Effect.provide(NodeServices.layer),
+      ),
+    )
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) return
+    expect(result.failure).toBeInstanceOf(AuthError)
+    if (!(result.failure instanceof AuthError)) return
+    expect(result.failure.message).toContain("failed (exit 2)")
+    expect(result.failure.message).not.toContain("PATH")
+  })
 })

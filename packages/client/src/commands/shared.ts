@@ -1,5 +1,5 @@
 import { basename } from "node:path"
-import { Effect } from "effect"
+import { Effect, Exit } from "effect"
 import { Client, type ClientError, type ClientReq, type LaunchHooks, type LaunchResult } from "../client.ts"
 import { printReady, spinner } from "../ui.ts"
 
@@ -36,11 +36,17 @@ export const withSpinner = <A, E, R>(
     onCreating: () => spin.update(start),
     onWaiting: () => spin.update(waiting),
   }).pipe(
-    Effect.tapError(() => Effect.sync(() => spin.fail(fail))),
-    Effect.map((value) => {
-      spin.stop()
-      onOk(value)
-    }),
+    Effect.tap((value) =>
+      Effect.sync(() => {
+        spin.stop()
+        onOk(value)
+      }),
+    ),
+    Effect.onExit((exit) =>
+      Effect.sync(() => {
+        if (Exit.isFailure(exit)) spin.fail(fail)
+      }),
+    ),
   )
 }
 

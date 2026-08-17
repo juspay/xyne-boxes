@@ -12,7 +12,10 @@ export const main = (
 ): Effect.Effect<number> =>
   Command.runWith(root, { version: versionString() })(prepareArgv(argv)).pipe(
     Effect.as(0),
-    Effect.catchIf(CliError.isCliError, (error) => Effect.sync(() => printError(error))),
+    // Effect CLI already printed usage/help; we only map the exit code.
+    Effect.catchIf(CliError.isCliError, (error) =>
+      Effect.succeed(error._tag === "ShowHelp" && error.errors.length === 0 ? 0 : 1),
+    ),
     Effect.match({
       onFailure: (error) => printError(error),
       onSuccess: (code) => code,

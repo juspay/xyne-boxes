@@ -1,4 +1,5 @@
 import { UsageError } from "./errors.ts"
+import { invalidBoxName } from "./names.ts"
 
 export interface ConnectArgs {
   readonly name: string
@@ -16,6 +17,8 @@ export function parseConnectArgs(
       message: `Usage: ${cliName} connect <name> [ssh options ...] [-- remote command ...]`,
     })
   }
+  const bad = invalidBoxName(name)
+  if (bad !== undefined) return new UsageError({ message: bad })
 
   const rest = argv.slice(1)
   const sshArgs: string[] = []

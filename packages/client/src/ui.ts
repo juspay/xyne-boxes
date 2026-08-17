@@ -79,13 +79,13 @@ ${ink(otBold("Usage"))}
   ${gold(cliName)} ${muted("<command>")}
 
 ${ink(otBold("Commands"))}
-  ${gold("create")} ${muted("<name>")}                 Create a box
-  ${gold("connect")} ${muted("<name> [ssh …]")}        SSH in; ${muted("--")} before a remote command
-  ${gold("list")}                           List your boxes
-  ${gold("fork")} ${muted("<source> <name>")}          Clone an existing box
-  ${gold("destroy")} ${muted("<name> […]")}            Destroy one or more boxes
-  ${gold("version")}                        Tool versions and commit
-  ${gold("help")}                           This screen
+  ${gold("create")}   ${muted("<name>")}                 Create a box
+  ${gold("connect")}  ${muted("<name> [ssh …]")}        SSH in; ${muted("--")} before a remote command
+  ${gold("list")}                            List your boxes
+  ${gold("fork")}     ${muted("<source> <name>")}          Clone an existing box
+  ${gold("destroy")}  ${muted("<name> […]")}            Destroy one or more boxes
+  ${gold("version")}                         Tool versions and commit
+  ${gold("help")}                            This screen
 
 ${ink(otBold("First time"))}
   ${muted("A browser window asks you to sign in with your Juspay Google account.")}

@@ -35,6 +35,12 @@ kolu-bot | dev-x86-64-linux-08 |
     expect(parseList("\n")).toEqual([])
   })
 
+  test("keeps a box literally named name", () => {
+    expect(parseList("NAME LOCATION\nname host-a\n")).toEqual([
+      { name: "name", location: "host-a", extra: [] },
+    ])
+  })
+
   test("keeps leftover columns", () => {
     expect(parseList("box host extra bits")).toEqual([
       { name: "box", location: "host", extra: ["extra", "bits"] },

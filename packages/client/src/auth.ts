@@ -51,11 +51,17 @@ const requireStep = Effect.gen(function* () {
     stdout: "ignore",
     stderr: "ignore",
   }).pipe(Effect.orElseSucceed(() => 127))
-  if (code !== 0) {
+  if (code === 127) {
     return yield* new MissingTool({
       tool: "step",
       hint:
         "Install with: curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh",
+    })
+  }
+  if (code !== 0) {
+    return yield* new AuthError({
+      message: `step is installed but failed (exit ${code}).`,
+      hint: "Reinstall with the curl installer, or set XYNE_STEP to a working binary.",
     })
   }
 })
