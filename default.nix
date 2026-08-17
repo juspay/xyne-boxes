@@ -1,7 +1,8 @@
-{
-  bun2nix,
-  pkgs,
-  lib,
+{ bun2nix
+, pkgs
+, lib
+, gitRev ? "unknown"
+,
 }:
 let
   version = (lib.importJSON ./packages/client/package.json).version;
@@ -41,6 +42,7 @@ let
       coreutils
     ];
     startScript = ''
+      export XYNE_COMMIT=${lib.escapeShellArg gitRev}
       bun packages/client/src/cli.ts "$@"
     '';
     postInstall = ''

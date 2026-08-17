@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { helpText, plainText } from "./ui.ts"
+import { AuthError, CommandFailed } from "./errors.ts"
+import { describeError, helpText, plainText } from "./ui.ts"
 
 describe("helpText", () => {
   test("names every command", () => {
@@ -8,5 +9,45 @@ describe("helpText", () => {
       expect(text).toContain(command)
     }
     expect(text).toContain("xyne-boxes <command>")
+  })
+})
+
+describe("describeError", () => {
+  test("renders AuthError by class and by _tag", () => {
+    const error = new AuthError({
+      message: "error downloading root certificate: connection refused",
+      hint: "Is pu reachable?",
+    })
+    expect(describeError(error)).toEqual({
+      headline: "error downloading root certificate: connection refused",
+      detail: "Is pu reachable?",
+      exitCode: 1,
+    })
+    expect(describeError({ _tag: "AuthError", message: error.message, hint: error.hint })).toEqual(
+      describeError(error),
+    )
+  })
+
+  test("renders CommandFailed without relying on instanceof", () => {
+    const error = new CommandFailed({
+      command: "/home/srid/.local/bin/step",
+      args: ["ca", "bootstrap", "--force"],
+      exitCode: 1,
+      stderr: "error downloading root certificate: connection refused\n",
+    })
+    expect(describeError(error)).toEqual({
+      headline: "error downloading root certificate: connection refused  exit 1",
+      detail: "/home/srid/.local/bin/step ca bootstrap --force",
+      exitCode: 1,
+    })
+    expect(
+      describeError({
+        _tag: "CommandFailed",
+        command: error.command,
+        args: error.args,
+        exitCode: error.exitCode,
+        stderr: error.stderr,
+      }),
+    ).toEqual(describeError(error))
   })
 })

@@ -43,6 +43,9 @@ jobs:
           bun test ./packages/client
           bunx tsc --noEmit -p packages/client
 
+      - name: Stamp commit into the binary
+        run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/client/src/commit.ts
+
       - name: Compile
         run: bun build --compile --outfile "${{ matrix.asset }}" packages/client/src/cli.ts
 
@@ -50,6 +53,7 @@ jobs:
         run: |
           chmod +x "${{ matrix.asset }}"
           "./${{ matrix.asset }}" version
+          "./${{ matrix.asset }}" version | grep -F "${GITHUB_SHA}"
           "./${{ matrix.asset }}" help
 
       - name: Upload artifact
@@ -78,13 +82,14 @@ jobs:
           chmod +x installer/fetch-step.sh
           installer/fetch-step.sh darwin-arm64 dist/step-darwin-arm64
           installer/fetch-step.sh linux-x64 dist/step-linux-x64
-          cp installer/install.sh dist/install.sh
+          printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
+          sed "s/__XYNE_COMMIT__/${GITHUB_SHA}/g" installer/install.sh > dist/install.sh
           chmod +x dist/xyne-boxes-* dist/step-* dist/install.sh
 
       - name: Checksums
         working-directory: dist
         run: |
-          sha256sum xyne-boxes-* step-* install.sh | tee SHA256SUMS
+          sha256sum xyne-boxes-* step-* install.sh COMMIT | tee SHA256SUMS
           ls -lh
 
       - name: Recreate the Nightly prerelease
@@ -108,10 +113,11 @@ jobs:
           curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
           \`\`\`
 
-          The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required." \
+          \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required." \
             dist/xyne-boxes-darwin-arm64 \
             dist/xyne-boxes-linux-x64 \
             dist/step-darwin-arm64 \
             dist/step-linux-x64 \
             dist/install.sh \
+            dist/COMMIT \
             dist/SHA256SUMS

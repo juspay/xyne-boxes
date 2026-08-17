@@ -2,7 +2,7 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node"
 import { Effect } from "effect"
 import { CliError, Command } from "effect/unstable/cli"
-import pkg from "../package.json" with { type: "json" }
+import { versionString } from "./build-info.ts"
 import { root } from "./commands/root.ts"
 import { prepareArgv } from "./commands/shared.ts"
 import { printError } from "./ui.ts"
@@ -10,7 +10,7 @@ import { printError } from "./ui.ts"
 export const main = (
   argv: ReadonlyArray<string> = process.argv.slice(2),
 ): Effect.Effect<number> =>
-  Command.runWith(root, { version: pkg.version })(prepareArgv(argv)).pipe(
+  Command.runWith(root, { version: versionString() })(prepareArgv(argv)).pipe(
     Effect.as(0),
     Effect.catchIf(CliError.isCliError, (error) => Effect.sync(() => printError(error))),
     Effect.match({

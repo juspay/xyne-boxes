@@ -85,7 +85,7 @@ ${ink(otBold("Commands"))}
   ${gold("list")}                           List your boxes
   ${gold("fork")} ${muted("<source> <name>")}          Clone an existing box
   ${gold("destroy")} ${muted("<name> […]")}            Destroy one or more boxes
-  ${gold("version")}                        Tool versions
+  ${gold("version")}                        Tool versions and commit
   ${gold("help")}                           This screen
 
 ${ink(otBold("First time"))}
@@ -197,46 +197,103 @@ export function printConnecting(name: string, remote: ReadonlyArray<string>): vo
   printErr(t`${gold("→")} ${ink("Connecting to")} ${gold(otBold(name))}`)
 }
 
-export function printError(error: unknown): number {
+const tagOf = (error: unknown): string | undefined => {
+  if (typeof error !== "object" || error === null || !("_tag" in error)) return undefined
+  const tag = (error as { _tag: unknown })._tag
+  return typeof tag === "string" ? tag : undefined
+}
+
+const field = (error: unknown, name: string): unknown => {
+  if (typeof error !== "object" || error === null) return undefined
+  return (error as Record<string, unknown>)[name]
+}
+
+const asString = (value: unknown): string | undefined =>
+  typeof value === "string" && value !== "" ? value : undefined
+
+export type ErrorView = {
+  readonly headline: string
+  readonly detail?: string
+  readonly exitCode: number
+}
+
+/** Structured error text so tests (and bun-compiled binaries) do not rely on instanceof. */
+export function describeError(error: unknown): ErrorView {
   if (CliError.isCliError(error)) {
     if (error._tag === "ShowHelp") {
-      return error.errors.length > 0 ? 1 : 0
+      return { headline: error.message, exitCode: error.errors.length > 0 ? 1 : 0 }
     }
-    printErr(t`${err("✗")} ${ink(error.message)}`)
-    return 1
+    return { headline: error.message, exitCode: 1 }
   }
-  if (error instanceof UsageError) {
-    printErr(t`${err("✗")} ${ink(error.message)}`)
-    printErr(t`  ${muted("Try")} ${gold("help")}`)
-    return 1
-  }
-  if (error instanceof MissingTool) {
-    printErr(t`${err("✗")} ${gold(error.tool)} ${ink("is not on PATH")}`)
-    printErr(t`  ${muted(error.hint)}`)
-    return 1
-  }
-  if (error instanceof AuthError) {
-    printErr(t`${err("✗")} ${ink(error.message)}`)
-    if (error.hint !== undefined) printErr(t`  ${muted(error.hint)}`)
-    return 1
-  }
-  if (error instanceof CommandFailed) {
-    const detail = error.stderr?.trim().split(/\r?\n/).filter((line) => line.trim() !== "").at(-1)
-    printErr(t`${err("✗")} ${ink(detail ?? "Command failed")}  ${muted(`exit ${error.exitCode}`)}`)
-    if (error.command === "ssh") {
-      printErr(
-        t`  ${muted("If this is a certificate expiry, run")} ${gold("connect")} ${muted("and sign in again.")}`,
-      )
+
+  const tag = tagOf(error)
+  if (error instanceof UsageError || tag === "UsageError") {
+    return {
+      headline: asString(field(error, "message")) ?? "Invalid usage",
+      detail: "Try help",
+      exitCode: 1,
     }
-    return error.exitCode === 0 ? 1 : error.exitCode
+  }
+  if (error instanceof MissingTool || tag === "MissingTool") {
+    const tool = asString(field(error, "tool")) ?? "tool"
+    return {
+      headline: `${tool} is not on PATH`,
+      detail: asString(field(error, "hint")),
+      exitCode: 1,
+    }
+  }
+  if (error instanceof AuthError || tag === "AuthError") {
+    return {
+      headline: asString(field(error, "message")) ?? "Authentication failed",
+      detail: asString(field(error, "hint")),
+      exitCode: 1,
+    }
+  }
+  if (error instanceof CommandFailed || tag === "CommandFailed") {
+    const stderr = asString(field(error, "stderr"))
+    const last = stderr
+      ?.trim()
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== "")
+      .at(-1)
+    const exitCodeRaw = field(error, "exitCode")
+    const exitCode = typeof exitCodeRaw === "number" && exitCodeRaw !== 0 ? exitCodeRaw : 1
+    const command = asString(field(error, "command"))
+    const args = field(error, "args")
+    const argv =
+      command !== undefined && Array.isArray(args)
+        ? [command, ...args.map(String)].join(" ")
+        : command
+    return {
+      headline: `${last ?? "Command failed"}  exit ${exitCode}`,
+      detail:
+        command === "ssh"
+          ? "If this is a certificate expiry, run connect and sign in again."
+          : argv,
+      exitCode,
+    }
   }
 
   const message =
     error instanceof Error
       ? error.message
-      : typeof error === "object" && error !== null && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error)
-  printErr(t`${err("✗")} ${ink(message)}`)
-  return 1
+      : asString(field(error, "message")) ?? String(error)
+  return { headline: message, exitCode: 1 }
+}
+
+export function printError(error: unknown): number {
+  if (CliError.isCliError(error) && error._tag === "ShowHelp") {
+    return error.errors.length > 0 ? 1 : 0
+  }
+  if (error instanceof MissingTool || tagOf(error) === "MissingTool") {
+    const tool = asString(field(error, "tool")) ?? "tool"
+    const hint = asString(field(error, "hint"))
+    printErr(t`${err("✗")} ${gold(tool)} ${ink("is not on PATH")}`)
+    if (hint !== undefined) printErr(t`  ${muted(hint)}`)
+    return 1
+  }
+  const view = describeError(error)
+  printErr(t`${err("✗")} ${ink(view.headline)}`)
+  if (view.detail !== undefined) printErr(t`  ${muted(view.detail)}`)
+  return view.exitCode
 }

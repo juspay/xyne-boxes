@@ -21,6 +21,13 @@ export interface Auth {
 
 const macArgs = ["-o", MAC_OPT] as const
 
+export const caUnreachableHint = (host: string, detail: string): string => {
+  if (/socks|proxychains/i.test(detail)) {
+    return `A proxy is intercepting the CA at ${host}. Run xyne-boxes directly (not via juspay-run/proxychains) on the Juspay Tailscale/headscale network.`
+  }
+  return `Is ${host} reachable? Join the Juspay Tailscale/headscale network, then retry.`
+}
+
 export const stepEnv = (
   config: ResolvedConfig,
 ): Record<string, string> => ({
@@ -99,7 +106,7 @@ export const ensureAuth = (
         const detail = lastProcessLine(bootstrapped)
         return yield* new AuthError({
           message: detail || "Could not reach the certificate authority.",
-          hint: `Is ${config.host} reachable? Join the Juspay Tailscale/headscale network, then retry.`,
+          hint: caUnreachableHint(config.host, detail),
         })
       }
     }

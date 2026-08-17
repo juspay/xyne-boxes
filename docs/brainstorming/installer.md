@@ -25,8 +25,11 @@ Implementation lives in [`installer/`](../../installer/). Nix `run` stays as the
 
 - `xyne-boxes-darwin-arm64` / `xyne-boxes-linux-x64` — `bun build --compile` on that OS
 - `step-darwin-arm64` / `step-linux-x64` — `installer/fetch-step.sh` (pinned in `installer/step-version`)
-- `install.sh`
+- `install.sh` — nightly publish bakes `GITHUB_SHA` over `__XYNE_COMMIT__`
+- `COMMIT` — same hash as a one-line file (installer fallback)
 - `SHA256SUMS`
+
+`xyne-boxes version` also prints the baked commit so a cached binary is obvious.
 
 OpenTUI natives do not cross-compile, so each `xyne-boxes-*` is built on the matching runner.
 

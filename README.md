@@ -28,7 +28,7 @@ nix run https://github.com/juspay/xyne-boxes/archive/main.zip <command>
 | `connect <name>` | SSH into a box |
 | `destroy <name> [name ...]` | Destroy one or more boxes |
 | `list` | List your boxes |
-| `version` | Print package, bun, ssh, and step-cli versions |
+| `version` | Print package, commit, bun, ssh, and step-cli versions |
 
 `nix run` ships **bun**, **openssh**, and **step-cli**. A new machine only needs [Nix](https://juspay.github.io/nixone/).
 

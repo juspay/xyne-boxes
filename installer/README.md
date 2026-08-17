@@ -19,4 +19,6 @@ Drops both binaries in `~/.local/bin`:
 | `fetch-step.sh` | CI: download official `step` for `darwin-arm64` / `linux-x64` |
 | `step-version` | Pinned Smallstep release |
 
-Override install location or release with `XYNE_BOXES_BIN` / `XYNE_BOXES_RELEASE`.
+The script prints the nightly **commit hash** (baked in at publish, or read from the `COMMIT` asset). `xyne-boxes version` prints the same hash from the binary, so a cached download is obvious.
+
+Override install location or release with `XYNE_BOXES_BIN` / `XYNE_BOXES_RELEASE`. `XYNE_BOXES_COMMIT` overrides the printed hash.

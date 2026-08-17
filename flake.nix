@@ -4,7 +4,7 @@
   inputs.bun2nix.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs =
-    { nixpkgs, bun2nix, ... }:
+    { self, nixpkgs, bun2nix, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -19,7 +19,11 @@
           inherit system;
           overlays = [ bun2nix.overlays.default ];
         };
-      builtFor = system: (pkgsFor system).callPackage ./default.nix { };
+      gitRev =
+        if self ? rev && self.rev != null then self.rev
+        else if self ? dirtyRev then self.dirtyRev
+        else "unknown";
+      builtFor = system: (pkgsFor system).callPackage ./default.nix { inherit gitRev; };
     in
     {
       packages = eachSystem (system: {

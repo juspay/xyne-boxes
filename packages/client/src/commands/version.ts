@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process"
 import { Effect } from "effect"
 import { Command } from "effect/unstable/cli"
-import pkg from "../../package.json" with { type: "json" }
+import { commitLabel, packageVersion } from "../build-info.ts"
 import { resolveStep } from "../tools.ts"
 import { printVersion } from "../ui.ts"
 
@@ -20,10 +20,11 @@ const toolVersion = (command: string, args: ReadonlyArray<string>): string => {
 export const version = Command.make("version", {}, () =>
   Effect.sync(() => {
     printVersion([
-      ["xyne-boxes", pkg.version],
+      ["xyne-boxes", packageVersion],
+      ["commit", commitLabel()],
       ["bun", Bun.version],
       ["ssh", toolVersion("ssh", ["-V"])],
       ["step", toolVersion(resolveStep(), ["version"])],
     ])
   }),
-).pipe(Command.withDescription("Print package, bun, ssh, and step-cli versions"))
+).pipe(Command.withDescription("Print package, commit, bun, ssh, and step-cli versions"))

@@ -7,6 +7,8 @@ set -eu
 
 RELEASE_URL="${XYNE_BOXES_RELEASE:-https://github.com/juspay/xyne-boxes/releases/download/nightly}"
 BIN_DIR="${XYNE_BOXES_BIN:-$HOME/.local/bin}"
+# Nightly publish replaces __XYNE_COMMIT__ with GITHUB_SHA.
+COMMIT="${XYNE_BOXES_COMMIT:-__XYNE_COMMIT__}"
 
 os=$(uname -s)
 arch=$(uname -m)
@@ -36,16 +38,25 @@ need() {
 need curl
 need uname
 
+if [ "$COMMIT" = "__XYNE_COMMIT__" ] || [ -z "$COMMIT" ]; then
+  COMMIT=$(curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/COMMIT" 2>/dev/null || true)
+fi
+if [ -n "$COMMIT" ]; then
+  echo "xyne-boxes: commit $COMMIT" >&2
+else
+  echo "xyne-boxes: commit unknown (no nightly COMMIT file)" >&2
+fi
+
 mkdir -p "$BIN_DIR"
 
 echo "xyne-boxes: installing into $BIN_DIR" >&2
 echo "xyne-boxes: $RELEASE_URL/$boxes_asset" >&2
-curl -fsSL "$RELEASE_URL/$boxes_asset" -o "$BIN_DIR/xyne-boxes"
+curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/$boxes_asset" -o "$BIN_DIR/xyne-boxes"
 chmod 755 "$BIN_DIR/xyne-boxes"
 ln -sfn xyne-boxes "$BIN_DIR/pu"
 
 echo "xyne-boxes: $RELEASE_URL/$step_asset  (pristine machines have no step)" >&2
-curl -fsSL "$RELEASE_URL/$step_asset" -o "$BIN_DIR/step"
+curl -fsSL -H 'Cache-Control: no-cache' "$RELEASE_URL/$step_asset" -o "$BIN_DIR/step"
 chmod 755 "$BIN_DIR/step"
 
 append_path() {
@@ -74,7 +85,7 @@ PATH="$BIN_DIR:$PATH"
 xyne-boxes version
 step version | head -n 1
 
-echo "xyne-boxes: installed." >&2
+echo "xyne-boxes: installed${COMMIT:+ ($COMMIT)}." >&2
 echo "  $BIN_DIR/xyne-boxes" >&2
 echo "  $BIN_DIR/step" >&2
 echo "Open a new shell if \`xyne-boxes\` is not found, or run:" >&2
