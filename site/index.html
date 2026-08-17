@@ -158,10 +158,10 @@
         padding: 10px 14px;
         border: 1px solid transparent;
       }
-      .btn-p { background: var(--lime); color: var(--ink); }
-      .btn-p:hover { background: var(--paper); color: var(--ink); }
-      .btn-g { border-color: #3a3a3a; color: var(--paper); }
-      .btn-g:hover { border-color: var(--paper); }
+      a.btn-p { background: var(--lime); color: var(--ink); }
+      a.btn-p:hover { background: var(--paper); color: var(--ink); }
+      a.btn-g { border-color: #3a3a3a; color: var(--paper); }
+      a.btn-g:hover { background: var(--paper); border-color: var(--paper); color: var(--ink); }
 
       .term {
         margin-top: 32px;
@@ -265,26 +265,26 @@
       button.copy.copied .copy-icon { display: none; }
       button.copy.copied .check-icon { display: block; }
 
-      .disc { border: 1px solid var(--line); margin-top: 12px; background: #f8f6ee; }
+      .disc { margin-top: 8px; }
       .disc > summary {
         list-style: none;
         cursor: pointer;
-        padding: 12px 14px;
-        font-family: var(--mono);
-        font-size: 12.5px;
-        line-height: 1.45;
+        padding: 4px 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: var(--ink);
         display: grid;
         grid-template-columns: 1fr auto;
-        align-items: start;
+        align-items: baseline;
         gap: 12px;
       }
+      .disc > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
       .disc > summary code { background: transparent; padding: 0; }
       .disc > summary::-webkit-details-marker { display: none; }
-      .disc > summary::after { content: "+"; color: var(--muted); font-weight: 700; }
+      .disc > summary::after { content: "+"; color: var(--ink); font-family: var(--mono); font-weight: 700; }
       .disc[open] > summary::after { content: "–"; }
-      .disc[open] > summary { border-bottom: 1px solid var(--line); }
-      .disc .dbody { padding: 14px; }
-      .disc .dbody > p { margin: 0 0 12px; }
+      .disc .dbody { padding: 6px 0 2px; }
+      .disc .dbody > p { margin: 0 0 10px; font-size: 15px; }
       .disc .dbody > p:last-child { margin-bottom: 0; }
 
       .cmds { width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 15px; }
