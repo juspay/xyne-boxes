@@ -110,8 +110,15 @@ jobs:
               shasum -a 256 "${{ matrix.boxes }}" "${{ matrix.step_asset }}" install.sh COMMIT
             fi
           ) > dist/SHA256SUMS
-          python3 -m http.server 8765 --directory dist &
-          sleep 1
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory dist > /tmp/xyne-http.log 2>&1 &
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+            if curl -fsS http://127.0.0.1:8765/COMMIT >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          cat /tmp/xyne-http.log
+          curl -fsS http://127.0.0.1:8765/COMMIT >/dev/null
           export XYNE_BOXES_RELEASE=http://127.0.0.1:8765
           export XYNE_BOXES_BIN="${HOME}/.local/bin"
           curl -fsSL "${XYNE_BOXES_RELEASE}/install.sh" | sh
