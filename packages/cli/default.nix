@@ -4,6 +4,7 @@
 , bun2nix
 , workspace
 , gitRev ? "unknown"
+, step
 ,
 }:
 let
@@ -26,12 +27,12 @@ in
   xyne-boxes = bun2nix.writeBunApplication (workspace.bunCommon // {
     pname = "xyne-boxes";
     inheritPath = true;
-    runtimeInputs = with pkgs; [
-      bun
-      openssh
-      step-cli
-      bash
-      coreutils
+    runtimeInputs = [
+      pkgs.bun
+      pkgs.openssh
+      step
+      pkgs.bash
+      pkgs.coreutils
     ];
     startScript = ''
       export XYNE_COMMIT=${lib.escapeShellArg gitRev}

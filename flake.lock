@@ -61,7 +61,35 @@
     "root": {
       "inputs": {
         "bun2nix": "bun2nix",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "step-darwin-arm64": "step-darwin-arm64",
+        "step-linux-x64": "step-linux-x64"
+      }
+    },
+    "step-darwin-arm64": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781124314,
+        "narHash": "sha256-6E+y4fyFo7u5NdFA65me25EjoBTbsGz0TB1QuIWHw0w=",
+        "type": "tarball",
+        "url": "https://github.com/smallstep/cli/releases/download/v0.30.6/step_darwin_0.30.6_arm64.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/smallstep/cli/releases/download/v0.30.6/step_darwin_0.30.6_arm64.tar.gz"
+      }
+    },
+    "step-linux-x64": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781124641,
+        "narHash": "sha256-iEB1jnBetzlV8una7lWmWrPDjtaqiRpSC0nkF1bnDP8=",
+        "type": "tarball",
+        "url": "https://github.com/smallstep/cli/releases/download/v0.30.6/step_linux_0.30.6_amd64.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/smallstep/cli/releases/download/v0.30.6/step_linux_0.30.6_amd64.tar.gz"
       }
     },
     "systems": {

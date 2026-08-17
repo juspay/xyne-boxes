@@ -20,10 +20,8 @@ pkgs.stdenv.mkDerivation {
     pkgs.gzip
   ];
   buildPhase = ''
-    chmod +x installer/install.sh installer/install.test.sh \
-      installer/fetch-step.sh installer/fetch-step.test.sh
+    chmod +x installer/install.sh installer/install.test.sh
     sh installer/install.test.sh
-    sh installer/fetch-step.test.sh
   '';
   installPhase = ''
     mkdir -p "$out"

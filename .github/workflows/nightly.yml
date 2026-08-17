@@ -45,9 +45,8 @@ jobs:
           bun test ./packages/client ./packages/cli
           bunx tsc --noEmit -p packages/client
           bunx tsc --noEmit -p packages/cli
-          chmod +x installer/install.test.sh installer/fetch-step.test.sh
+          chmod +x installer/install.test.sh
           sh installer/install.test.sh
-          sh installer/fetch-step.test.sh
 
       - name: Stamp commit into the binary
         run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/cli/src/commit.ts
@@ -79,11 +78,9 @@ jobs:
         include:
           - os: macos-latest
             boxes: xyne-boxes-darwin-arm64
-            step_plat: darwin-arm64
             step_asset: step-darwin-arm64
           - os: ubuntu-latest
             boxes: xyne-boxes-linux-x64
-            step_plat: linux-x64
             step_asset: step-linux-x64
     steps:
       - name: Check out repository
@@ -95,11 +92,18 @@ jobs:
           name: ${{ matrix.boxes }}
           path: dist
 
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
       - name: Assemble a local release and curl-install it
         run: |
           set -eux
-          chmod +x installer/fetch-step.sh installer/install.sh
-          installer/fetch-step.sh "${{ matrix.step_plat }}" "dist/${{ matrix.step_asset }}"
+          chmod +x installer/install.sh
+          nix build ".#${{ matrix.step_asset }}" --out-link step-out
+          cp step-out/bin/step "dist/${{ matrix.step_asset }}"
           printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
           cp installer/install.sh dist/install.sh
           chmod +x dist/"${{ matrix.boxes }}" dist/"${{ matrix.step_asset }}" dist/install.sh
@@ -144,11 +148,19 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Fetch official step binaries
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Official step binaries
         run: |
-          chmod +x installer/fetch-step.sh
-          installer/fetch-step.sh darwin-arm64 dist/step-darwin-arm64
-          installer/fetch-step.sh linux-x64 dist/step-linux-x64
+          mkdir -p dist
+          for p in step-darwin-arm64 step-linux-x64; do
+            nix build ".#$p" --out-link "$p"
+            cp "$p/bin/step" "dist/$p"
+          done
           printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
           sed "s/__XYNE_COMMIT__/${GITHUB_SHA}/g" installer/install.sh > dist/install.sh
           chmod +x dist/xyne-boxes-* dist/step-* dist/install.sh
