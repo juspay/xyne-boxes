@@ -8,92 +8,71 @@ curl -fsSL https://juspay.github.io/xyne-boxes/install.sh | bash
 
 Nix `run` stays. This is for a machine that only has `curl` and Apple’s `ssh`.
 
+**v1 is macOS only** (`darwin-arm64`, `darwin-x64`). No Linux, no Windows, no Homebrew.
+
 ## What those installers actually do
 
 1. CI builds a **standalone binary per OS/arch**
-2. Upload to GitHub Releases (or a CDN)
+2. Upload to GitHub Releases
 3. `install.sh` detects platform, downloads, drops it in `~/.local/bin`, maybe mends `PATH`
 
-xyne-boxes is the same shape, plus one extra tool.
+xyne-boxes is the same shape, plus one extra tool (`step`).
 
 ## What the user must have after install
 
 | Need | Fresh MacBook |
 | --- | --- |
-| `xyne-boxes` itself | Must ship |
+| `xyne-boxes` itself | Compiled release asset |
 | OpenSSH | Already there (`/usr/bin/ssh`) |
-| `step` (Smallstep CLI) | **Not** there — installer must fetch it |
+| `step` (Smallstep CLI) | **Not** there — installer must fetch it, unless we [reimplement it](step-ts.md) |
 | bash | `/bin/bash` is enough for the proxy script |
-| Bun | Only if we *don’t* compile; a compiled binary embeds it |
 
-`ensureAuth()` shells out to `ssh-keygen` and `step`. No `step` → no Google device-login cert. The installer has to provide `step` or the curl path is a lie.
+`ensureAuth()` shells out to `ssh-keygen` and `step`. No `step` → no Google device-login cert.
 
-## What to build
+## Compile the CLI (release assets)
 
-### 1. Compile the CLI
+Done in [`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml). Native macOS runners (OpenTUI cannot be cross-compiled):
 
 ```
-bun build --compile --outfile xyne-boxes packages/client/src/cli.ts
+bun build --compile --outfile xyne-boxes-darwin-arm64 packages/client/src/cli.ts
 ```
 
-One file with Bun inside (~50–90MB). Matrix: `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`.
+Local spike on linux-x64 produced a working ~129MB binary (`version` / `help` ran). Cross-compile to another OpenTUI arch failed to resolve `@opentui/core-<os>-<arch>`, so each asset is compiled **on that Mac**.
 
-**Risk:** `@opentui/core` is native per-arch. Compile has to succeed on each runner (or drop OpenTUI from the release binary and keep ANSI). Spike this first — if compile + OpenTUI fails, the plan changes.
+### Nightly
 
-### 2. GitHub Release assets
-
-On tag `v0.1.0`:
+Push to `main` or `ts` (and `workflow_dispatch`) force-updates the moving `nightly` tag and the **Nightly** prerelease:
 
 - `xyne-boxes-darwin-arm64`
 - `xyne-boxes-darwin-x64`
-- `xyne-boxes-linux-x64`
-- `xyne-boxes-linux-arm64`
 - `SHA256SUMS`
 
-Optionally a tarball that also contains `step` so the script is one download.
+`ts` publishes to the same tag so we can test the workflow before merge. Last push wins.
 
-### 3. `install.sh`
+## Still to build
 
-Host on the existing Pages site:
+### `install.sh`
 
-```
-curl -fsSL https://juspay.github.io/xyne-boxes/install.sh | bash
-```
+Not on the website yet. When we add it:
 
-It should:
-
-- Detect `uname -s` / `uname -m`
-- Download the matching release binary
+- Detect `uname -s` / `uname -m` (Darwin only)
+- Download the matching `nightly` (or tagged) asset
 - Install to `~/.local/bin/xyne-boxes` (and `pu` symlink)
-- If `step` is missing, download Smallstep’s official binary for that platform into the same dir
-- Append `~/.local/bin` to `PATH` in `.zshrc` / `.bashrc` if needed
-- Run `xyne-boxes version` as a smoke check
+- If `step` is missing, download Smallstep’s official Darwin binary into the same dir — or wait for [step-ts](step-ts.md)
+- Append `~/.local/bin` to `PATH` in `.zshrc` if needed
+- Run `xyne-boxes version`
 
-Do **not** require root. Do **not** assume Homebrew.
+No root.
 
-### 4. CI
+### Versioned tags
 
-A `release` workflow: tag → matrix compile → `gh release upload`. Same job can `nix build` so the Nix and curl artifacts stay in lockstep.
+`packages/client` is `0.1.0`. Nightly is enough to test the pipeline. Semver tags (`v0.1.0`) can reuse the same compile job later.
 
-### 5. Versioning
+## Skip
 
-`packages/client` is `0.1.0` and nothing tags releases yet. Need tagged versions or `install.sh` has nothing stable to pin.
-
-## Skip for v1
-
-- Homebrew tap (nice later)
-- npm global (library is already importable; npm still wouldn’t give you `step`)
-- Windows
-- Reimplementing `step` in TypeScript
-- A self-update command (`install.sh` again is enough)
-
-## Effort
-
-| Piece | Rough size |
-| --- | --- |
-| Spike `bun --compile` + OpenTUI natives | half a day — **do this first** |
-| `install.sh` + `step` fetch | half a day |
-| Release workflow + checksums | half to one day |
-| Site/README one-liner | small |
-
-The only real unknown is whether a compiled binary plus OpenTUI natives is clean on Darwin and Linux. Everything else is standard release plumbing.
+- Homebrew
+- Linux / Windows
+- npm global
+- [Reimplementing `step` in TypeScript](step-ts.md) until shipping `step` hurts
+- Self-update command (`install.sh` again)
+- Website deploy of the installer
