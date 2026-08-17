@@ -4,15 +4,15 @@ on:
   push:
     branches:
       - main
-      # Drop `ts` when this PR merges — it only exists so the branch can dogfood the installer.
       - ts
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: nightly-${{ github.ref_name }}
+  group: nightly
   cancel-in-progress: true
 
 jobs:
@@ -68,9 +68,63 @@ jobs:
           path: ${{ matrix.asset }}
           if-no-files-found: error
 
+  install-e2e:
+    name: Curl-install on ${{ matrix.os }}
+    needs: compile
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            boxes: xyne-boxes-darwin-arm64
+            step_plat: darwin-arm64
+            step_asset: step-darwin-arm64
+          - os: ubuntu-latest
+            boxes: xyne-boxes-linux-x64
+            step_plat: linux-x64
+            step_asset: step-linux-x64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download compiled CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.boxes }}
+          path: dist
+
+      - name: Assemble a local release and curl-install it
+        run: |
+          set -eux
+          chmod +x installer/fetch-step.sh installer/install.sh
+          installer/fetch-step.sh "${{ matrix.step_plat }}" "dist/${{ matrix.step_asset }}"
+          printf '%s\n' "${GITHUB_SHA}" > dist/COMMIT
+          cp installer/install.sh dist/install.sh
+          chmod +x dist/"${{ matrix.boxes }}" dist/"${{ matrix.step_asset }}" dist/install.sh
+          (
+            cd dist
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "${{ matrix.boxes }}" "${{ matrix.step_asset }}" install.sh COMMIT
+            else
+              shasum -a 256 "${{ matrix.boxes }}" "${{ matrix.step_asset }}" install.sh COMMIT
+            fi
+          ) > dist/SHA256SUMS
+          python3 -m http.server 8765 --directory dist &
+          sleep 1
+          export XYNE_BOXES_RELEASE=http://127.0.0.1:8765
+          export XYNE_BOXES_BIN="${HOME}/.local/bin"
+          curl -fsSL "${XYNE_BOXES_RELEASE}/install.sh" | sh
+          if [ "$(uname -s)" = Darwin ]; then
+            echo "xattr after install:"
+            xattr -l "${XYNE_BOXES_BIN}/xyne-boxes" || true
+          fi
+          "${XYNE_BOXES_BIN}/xyne-boxes" version
+          "${XYNE_BOXES_BIN}/step" version | head -n 1
+
   publish:
     name: Publish nightly tag
-    needs: compile
+    needs: [compile, install-e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -98,20 +152,17 @@ jobs:
           ls -lh
 
       - name: Recreate the Nightly prerelease
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            TAG=nightly
-          else
-            TAG="nightly-${GITHUB_REF_NAME}"
-          fi
-          NOTES="Moving \`${TAG}\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
+          TAG=nightly
+          NOTES="Moving \`nightly\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
           Pristine macOS (Apple Silicon) and Linux x86_64:
 
           \`\`\`
-          curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/${TAG}/installer/install.sh | sh
+          curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
           \`\`\`
 
           \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required."

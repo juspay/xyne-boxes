@@ -21,10 +21,6 @@ Drops both binaries in `~/.local/bin`:
 
 The script prints the nightly **commit hash** (baked in at publish, or read from the `COMMIT` asset). `xyne-boxes version` prints the same hash from the binary, so a cached download is obvious. Downloads go to a temp file in the dest dir, are checked against `SHA256SUMS`, then `mv`'d over the previous binary.
 
-`main` publishes the `nightly` tag. Other branches publish `nightly-<branch>` so they do not overwrite it. This PR is `nightly-ts`:
-
-```
-curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly-ts/installer/install.sh | sh
-```
+Push to `main` or `ts` updates the `nightly` tag.
 
 Override install location or release with `XYNE_BOXES_BIN` / `XYNE_BOXES_RELEASE`. `XYNE_BOXES_COMMIT` overrides the printed hash.

@@ -21,7 +21,7 @@ Implementation lives in [`installer/`](../../installer/). Nix `run` stays as the
 
 ## Nightly assets
 
-[`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml) on `main` (`nightly` tag) / `ts` (`nightly-ts` tag):
+[`.github/workflows/nightly.yml`](../../.github/workflows/nightly.yml) on `main` / `ts` (tag `nightly`):
 
 - `xyne-boxes-darwin-arm64` / `xyne-boxes-linux-x64` — `bun build --compile` on that OS
 - `step-darwin-arm64` / `step-linux-x64` — `installer/fetch-step.sh` (pinned in `installer/step-version`, verified against Smallstep `checksums.txt`)
