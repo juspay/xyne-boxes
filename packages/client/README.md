@@ -4,6 +4,47 @@ TypeScript client for [xyne-boxes](https://juspay.github.io/xyne-boxes/). Effect
 
 The library never spawns `ssh`. It creates, forks, lists, and destroys boxes, and returns SSH config. The CLI is what execs `ssh`.
 
+```mermaid
+flowchart TB
+  ext["External TypeScript app"]
+  term["Terminal / nix run"]
+
+  subgraph lib ["Library — src/index.ts"]
+    Client["Client.create / fork / list / destroy / sshConfig"]
+    auth["ensureAuth"]
+    sshmod["ssh.ts — control-plane ssh, ssh_config, proxy"]
+    Client --> auth
+    Client --> sshmod
+  end
+
+  subgraph cli ["CLI"]
+    entry["cli.ts"]
+    root["commands/root.ts — Effect CLI"]
+    cmds["create · fork · list · destroy · connect · version · help"]
+    ui["ui.ts — OpenTUI styled text"]
+    entry --> root --> cmds
+    cmds --> ui
+  end
+
+  state["~/.pu-state — key, cert, per-box ssh_config, ssh-proxy"]
+  step["step-cli + ssh-keygen"]
+  pu["pu@PU_HOST — create / wait / list / destroy"]
+  box["Box — ssh as toor"]
+
+  ext --> Client
+  term --> entry
+  cmds --> Client
+  cmds -->|connect execs ssh| box
+  auth --> step
+  auth --> state
+  sshmod --> state
+  sshmod --> pu
+  state -.->|ProxyCommand| pu
+  box -.-> pu
+```
+
+External apps import `Client` and stay in Effect. The CLI parses argv, calls the same `Client`, and is the only thing that `exec`s `ssh`. Every mutating call goes through `ensureAuth` first.
+
 ## Library
 
 Peers: `effect` and `@effect/platform-node` (4.0.0-beta.103). Bun can import this package from source.
