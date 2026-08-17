@@ -117,6 +117,17 @@ mv -f "$work/$boxes_asset" "$BIN_DIR/xyne-boxes"
 mv -f "$work/$step_asset" "$BIN_DIR/step"
 ln -sfn xyne-boxes "$BIN_DIR/pu"
 
+# bun --compile is linker-signed; Apple Silicon SIGKILLs that (Killed: 9).
+# Ad-hoc sign on the user's Mac so the page size matches this OS. Do not
+# re-sign official step — that already has a Developer ID.
+if [ "$os" = Darwin ]; then
+  case "$(file -b "$BIN_DIR/xyne-boxes" 2>/dev/null || true)" in
+    Mach-O*)
+      codesign --force --sign - "$BIN_DIR/xyne-boxes"
+      ;;
+  esac
+fi
+
 append_path() {
   profile=$1
   line="export PATH=\"$BIN_DIR:\$PATH\"  # xyne-boxes"

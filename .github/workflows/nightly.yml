@@ -56,6 +56,9 @@ jobs:
       - name: Smoke the binary
         run: |
           chmod +x "${{ matrix.asset }}"
+          if [ "$(uname -s)" = Darwin ]; then
+            codesign --force --sign - "${{ matrix.asset }}"
+          fi
           "./${{ matrix.asset }}" version
           "./${{ matrix.asset }}" version | grep -F "${GITHUB_SHA}"
           "./${{ matrix.asset }}" help
