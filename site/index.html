@@ -60,8 +60,9 @@
       :not(pre) > code {
         font-family: var(--mono);
         font-size: .84em;
-        background: #e8e5db;
-        padding: .1em .35em;
+        background: var(--ink);
+        color: var(--paper);
+        padding: .1em .4em;
       }
 
       .skip {
@@ -265,26 +266,33 @@
       button.copy.copied .copy-icon { display: none; }
       button.copy.copied .check-icon { display: block; }
 
-      .disc { margin-top: 8px; }
+      .disc { margin-top: 10px; }
       .disc > summary {
         list-style: none;
         cursor: pointer;
-        padding: 4px 0;
-        font-size: 14px;
+        padding: 8px 10px;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
         line-height: 1.4;
-        color: var(--ink);
+        background: var(--ink);
+        color: var(--paper);
         display: grid;
         grid-template-columns: 1fr auto;
-        align-items: baseline;
+        align-items: center;
         gap: 12px;
       }
-      .disc > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
-      .disc > summary code { background: transparent; padding: 0; }
+      .disc > summary:hover { color: var(--lime); }
+      .disc > summary code { background: var(--paper); color: var(--ink); }
       .disc > summary::-webkit-details-marker { display: none; }
-      .disc > summary::after { content: "+"; color: var(--ink); font-family: var(--mono); font-weight: 700; }
+      .disc > summary::after { content: "+"; color: var(--lime); font-weight: 700; }
       .disc[open] > summary::after { content: "–"; }
-      .disc .dbody { padding: 6px 0 2px; }
-      .disc .dbody > p { margin: 0 0 10px; font-size: 15px; }
+      .disc .dbody {
+        padding: 12px 10px 2px;
+        border: 1px solid var(--ink);
+        border-top: 0;
+      }
+      .disc .dbody > p { margin: 0 0 10px; font-size: 15px; color: var(--ink); }
       .disc .dbody > p:last-child { margin-bottom: 0; }
 
       .cmds { width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 15px; }
