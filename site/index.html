@@ -296,13 +296,13 @@
             <div class="run">
               <div>
                 <div class="lbl">Create</div>
-                <pre><span class="acc">$</span> nix run … create <span class="acc">mybox</span></pre>
+                <pre><span class="acc">$</span> xyne-boxes create <span class="acc">mybox</span></pre>
               </div>
             </div>
             <div class="run">
               <div>
                 <div class="lbl">Connect</div>
-                <pre><span class="acc">$</span> nix run … connect <span class="acc">mybox</span></pre>
+                <pre><span class="acc">$</span> xyne-boxes connect <span class="acc">mybox</span></pre>
               </div>
             </div>
           </div>
@@ -317,7 +317,7 @@
               <div class="n">01</div>
               <div>
                 <h3>Install the CLI</h3>
-                <p>Either <a href="https://juspay.github.io/nixone/">install Nix</a> and use <code>nix run</code> below, or on a pristine Mac (Apple Silicon) or Linux x86_64 skip Nix:</p>
+                <p>On a pristine Mac (Apple Silicon) or Linux x86_64, install the CLI (and <code>step</code>) with no Nix. Or <a href="https://juspay.github.io/nixone/">install Nix</a> and skip this — every command can be <code>nix run …</code> instead.</p>
                 <div class="snip">
                   <pre><span class="p">$</span><code id="cmd-curl">curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh</code></pre>
                   <button type="button" class="copy" data-copy="#cmd-curl" aria-label="Copy" title="Copy">
@@ -376,12 +376,18 @@ chmod +x /usr/local/bin/tailscale</code></pre>
               <div>
                 <h3>Create it</h3>
                 <div class="snip">
-                  <pre><span class="p">$</span><code id="cmd-create">nix run https://github.com/juspay/xyne-boxes/archive/main.zip create &lt;name&gt;</code></pre>
+                  <pre><span class="p">$</span><code id="cmd-create">xyne-boxes create &lt;name&gt;</code></pre>
                   <button type="button" class="copy" data-copy="#cmd-create" aria-label="Copy" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button>
                 </div>
+                <details class="note">
+                  <summary>Using Nix instead of the curl installer?</summary>
+                  <div class="body">
+                    <p>Prefix every command with <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. Example: <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip create &lt;name&gt;</code>.</p>
+                  </div>
+                </details>
                 <details class="note">
                   <summary>First time — and about once a week — you will sign in</summary>
                   <div class="body">
@@ -395,7 +401,7 @@ chmod +x /usr/local/bin/tailscale</code></pre>
               <div>
                 <h3>Connect</h3>
                 <div class="snip">
-                  <pre><span class="p">$</span><code id="cmd-connect">nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect &lt;name&gt;</code></pre>
+                  <pre><span class="p">$</span><code id="cmd-connect">xyne-boxes connect &lt;name&gt;</code></pre>
                   <button type="button" class="copy" data-copy="#cmd-connect" aria-label="Copy" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
@@ -448,13 +454,13 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
         <article id="cli">
           <p class="label">03 · Reference</p>
           <h2>Every command</h2>
-          <p class="lede">With Nix, prefix is <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. After the curl installer, the command is just <code>xyne-boxes</code>. Copy pastes the Nix form.</p>
+          <p class="lede">After the curl installer the command is <code>xyne-boxes</code>. If you skipped it, prefix with <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. Copy pastes the installed form.</p>
           <table class="cli">
             <thead><tr><th>Command</th><th>Does</th></tr></thead>
             <tbody>
               <tr>
                 <td><div class="cell"><code>create &lt;name&gt;</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip create <name>" aria-label="Copy create" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes create <name>" aria-label="Copy create" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -462,7 +468,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
               </tr>
               <tr>
                 <td><div class="cell"><code>connect &lt;name&gt;</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect <name>" aria-label="Copy connect" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes connect <name>" aria-label="Copy connect" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -470,7 +476,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
               </tr>
               <tr>
                 <td><div class="cell"><code>list</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip list" aria-label="Copy list" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes list" aria-label="Copy list" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -478,7 +484,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
               </tr>
               <tr>
                 <td><div class="cell"><code>fork &lt;source&gt; &lt;name&gt;</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip fork <source> <name>" aria-label="Copy fork" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes fork <source> <name>" aria-label="Copy fork" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -486,7 +492,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
               </tr>
               <tr>
                 <td><div class="cell"><code>destroy &lt;name&gt; …</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip destroy <name>" aria-label="Copy destroy" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes destroy <name>" aria-label="Copy destroy" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -494,7 +500,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
               </tr>
               <tr>
                 <td><div class="cell"><code>version</code>
-                  <button type="button" class="copy" data-text="nix run https://github.com/juspay/xyne-boxes/archive/main.zip version" aria-label="Copy version" title="Copy">
+                  <button type="button" class="copy" data-text="xyne-boxes version" aria-label="Copy version" title="Copy">
                     <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                   </button></div></td>
@@ -539,7 +545,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
 Connection closed by UNKNOWN port 65535</div>
             <p>Nothing is broken. Run <code>connect</code> again and sign in the same way — about 20 seconds, then you are good for another week.</p>
             <div class="snip">
-              <pre><span class="p">$</span><code id="cmd-renew">nix run https://github.com/juspay/xyne-boxes/archive/main.zip connect &lt;name&gt;</code></pre>
+              <pre><span class="p">$</span><code id="cmd-renew">xyne-boxes connect &lt;name&gt;</code></pre>
               <button type="button" class="copy" data-copy="#cmd-renew" aria-label="Copy" title="Copy">
                 <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                 <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
