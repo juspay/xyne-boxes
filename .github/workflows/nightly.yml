@@ -67,17 +67,24 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download compiled CLIs
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      - name: Fetch official step binaries
+        run: |
+          chmod +x installer/fetch-step.sh
+          installer/fetch-step.sh darwin-arm64 dist/step-darwin-arm64
+          installer/fetch-step.sh linux-x64 dist/step-linux-x64
+          cp installer/install.sh dist/install.sh
+          chmod +x dist/xyne-boxes-* dist/step-* dist/install.sh
+
       - name: Checksums
         working-directory: dist
         run: |
-          chmod +x xyne-boxes-*
-          sha256sum xyne-boxes-* | tee SHA256SUMS
+          sha256sum xyne-boxes-* step-* install.sh | tee SHA256SUMS
           ls -lh
 
       - name: Recreate the Nightly prerelease
@@ -95,12 +102,16 @@ jobs:
             --target "${GITHUB_SHA}" \
             --notes "Moving nightly from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
-          Needs \`ssh\` and \`step\` on PATH.
+          Pristine macOS (Apple Silicon) and Linux x86_64:
 
-          Assets:
-          - \`xyne-boxes-darwin-arm64\`
-          - \`xyne-boxes-linux-x64\`
-          - \`SHA256SUMS\`" \
+          \`\`\`
+          curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh
+          \`\`\`
+
+          The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required." \
             dist/xyne-boxes-darwin-arm64 \
             dist/xyne-boxes-linux-x64 \
+            dist/step-darwin-arm64 \
+            dist/step-linux-x64 \
+            dist/install.sh \
             dist/SHA256SUMS

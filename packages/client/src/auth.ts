@@ -3,6 +3,7 @@ import type { PlatformError } from "effect/PlatformError"
 import { type ResolvedConfig, identityPaths, MAC_OPT } from "./config.ts"
 import { AuthError, CommandFailed, MissingTool } from "./errors.ts"
 import { runExitCode, runOk, type ProcessReq } from "./process.ts"
+import { resolveStep } from "./tools.ts"
 
 export interface AuthHooks {
   readonly onSigning?: () => void
@@ -28,7 +29,8 @@ export const stepEnv = (
 })
 
 const requireStep = Effect.gen(function* () {
-  const code = yield* runExitCode("step", ["version"], {
+  const step = resolveStep()
+  const code = yield* runExitCode(step, ["version"], {
     stdout: "ignore",
     stderr: "ignore",
   }).pipe(Effect.orElseSucceed(() => 127))
@@ -36,7 +38,7 @@ const requireStep = Effect.gen(function* () {
     return yield* new MissingTool({
       tool: "step",
       hint:
-        "nix run github:juspay/xyne-boxes ships step-cli, openssh, and bun. If you imported the library directly, put step on PATH.",
+        "Install with: curl -fsSL https://github.com/juspay/xyne-boxes/releases/download/nightly/install.sh | sh",
     })
   }
 })
@@ -65,6 +67,7 @@ export const ensureAuth = (
 
     yield* requireStep
 
+    const step = resolveStep()
     const paths = identityPaths(config.stateDir)
     const env = stepEnv(config)
 
@@ -72,13 +75,13 @@ export const ensureAuth = (
       yield* runOk("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-f", paths.key])
     }
 
-    const healthy = yield* runExitCode("step", ["ca", "health"], {
+    const healthy = yield* runExitCode(step, ["ca", "health"], {
       env,
       stdout: "ignore",
       stderr: "ignore",
     }).pipe(Effect.orElseSucceed(() => 1))
     if (healthy !== 0) {
-      yield* runOk("step", ["ca", "bootstrap", "--force"], { env })
+      yield* runOk(step, ["ca", "bootstrap", "--force"], { env })
     }
 
     const certOk = yield* fs.exists(paths.cert)
@@ -90,7 +93,7 @@ export const ensureAuth = (
     const needsRenewal =
       !certOk ||
       provisioner !== config.provisioner ||
-      (yield* runExitCode("step", [
+      (yield* runExitCode(step, [
         "ssh",
         "needs-renewal",
         paths.cert,
@@ -104,7 +107,7 @@ export const ensureAuth = (
 
     if (needsRenewal) {
       hooks.onSigning?.()
-      const signed = yield* runExitCode("step", [
+      const signed = yield* runExitCode(step, [
         "ssh",
         "certificate",
         "--force",
