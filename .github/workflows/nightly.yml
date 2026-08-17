@@ -12,7 +12,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: nightly
+  # Keep pull_request checks from cancelling the push that publishes `nightly`.
+  group: nightly-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
