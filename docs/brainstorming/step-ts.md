@@ -33,14 +33,40 @@ From `packages/client/src/auth.ts`, with `STEP_CA_URL` (default `https://$PU_HOS
 
 `--no-agent --no-password --insecure --force` just means: don’t talk to ssh-agent, empty passphrase, allow the CA’s HTTP quirks, overwrite the cert file. None of that is crypto we have to invent.
 
-## What we would add
+## Implementation (minimize hand-rolling)
 
-- HTTPS client pinned to the CA root (Bun `fetch` + custom CA, or `undici`).
-- Tiny OpenSSH cert reader (expiry + maybe key id).
-- OIDC device-flow loop (poll token endpoint until the user finishes Google login or we time out).
-- CA sign request/response for SSH certs (Smallstep’s `/ssh/sign` JSON).
+Stay on Bun. Prefer one mature library per job; do **not** write parsers or OAuth loops.
 
-No new native deps if we stay on Bun. Tests: fixture certs for expiry math; mock CA for health/bootstrap/sign. Device flow needs a recorded fixture or a fake OIDC server.
+| Job | Use | Do not |
+| --- | --- | --- |
+| SHA-256 fingerprint of the CA root | `node:crypto` (`createHash("sha256")`) | a hashing package |
+| Parse / write the PEM root | `@peculiar/x509` | string-split PEM |
+| HTTPS to the CA with that root pinned | `undici` `Agent` + `connect.tls.ca` (Bun can use it). After bootstrap, all CA calls go through this agent. | `NODE_TLS_REJECT_UNAUTHORIZED=0` |
+| `GET /health`, `GET /roots`, `GET /provisioners`, `POST /ssh/sign` | same `undici` client; decode bodies with **Effect Schema** (already a dependency) | a second HTTP stack, Zod |
+| OpenSSH cert expiry (`key-cert.pub`) | [`sshpk`](https://github.com/TritonDataCenter/node-sshpk) `parseCertificate(buf, "openssh")` → `valid.until`, or [`@peculiar/ssh`](https://github.com/PeculiarVentures/ssh) if we want first-class TS | a hand-written OpenSSH wire parser |
+| Google device login (`--console`) | [`openid-client`](https://github.com/panva/openid-client) v6: `discovery` from the provisioner’s issuer, `initiateDeviceAuthorization`, `pollDeviceAuthorizationGrant`. Print `verification_uri` + `user_code` to stderr (same UX as `step`). | RFC 8628 polling written by us |
+| `ssh-keygen` | still the system binary | tweetnacl / WebCrypto keygen (OpenSSH file format is not worth it) |
+
+There is **no official Smallstep TypeScript SDK**. The only protocol we own is the thin CA JSON around `/ssh/sign` (public key in, OpenSSH cert out, OIDC access token as bearer). Capture that once with `step ssh certificate -v` against the real `GoogleBrowserless` provisioner and encode it as a Schema — do not guess.
+
+Sketch of the sign path:
+
+```ts
+import * as client from "openid-client"
+import { parseCertificate } from "sshpk"
+
+const config = await client.discovery(new URL(provisioner.oidc.configurationEndpoint))
+const device = await client.initiateDeviceAuthorization(config, { scope: provisioner.oidc.scope })
+// print device.verification_uri + device.user_code
+const tokens = await client.pollDeviceAuthorizationGrant(config, device)
+const cert = await ca.fetch("/ssh/sign", { token: tokens.access_token, pub: publicKey })
+```
+
+Renewal is `parseCertificate(readFile(certPath), "openssh")` and compare `valid.until` to `now + 0.25 * lifetime`.
+
+Tests: `sshpk` against checked-in fixture certs; `undici` MockAgent for health/bootstrap/sign; `openid-client` against a recorded device-flow fixture or a stub issuer. Do not hit Google in unit tests.
+
+Native addons: none of the above require them if we pick `sshpk` (pure JS). `@peculiar/ssh` uses WebCrypto (fine in Bun). `openid-client` is pure JS.
 
 ## Cost and risk
 
