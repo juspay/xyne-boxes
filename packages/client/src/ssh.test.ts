@@ -45,9 +45,9 @@ describe("formatSshConfigFile", () => {
 })
 
 describe("SSH_PROXY_SCRIPT", () => {
-  test("renew hint names both the installed CLI and nix run", () => {
+  test("renew hint is the connect command", () => {
     expect(SSH_PROXY_SCRIPT).toContain("xyne-boxes connect $name")
-    expect(SSH_PROXY_SCRIPT).toContain("nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- connect $name")
+    expect(SSH_PROXY_SCRIPT).toContain("certificate is missing or expired")
   })
 })
 

@@ -9,8 +9,9 @@ describe("invalidBoxName", () => {
   })
 
   test("rejects empty, spaces, and path separators", () => {
-    expect(invalidBoxName("")).toContain("invalid box name")
-    expect(invalidBoxName("../etc")).toContain("invalid box name")
-    expect(invalidBoxName("a b")).toContain("invalid box name")
+    expect(invalidBoxName("")).toContain("Box name is empty")
+    expect(invalidBoxName("../etc")).toContain("\"../etc\" is not a valid box name")
+    expect(invalidBoxName("a b")).toContain("\"a b\" is not a valid box name")
+    expect(invalidBoxName("a b")).toContain("app-pr-42")
   })
 })

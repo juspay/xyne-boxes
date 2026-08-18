@@ -15,11 +15,13 @@ describe("caUnreachableHint", () => {
         "pu",
         "error downloading root certificate: socks connect tcp 127.0.0.1:1080->pu:8443: EOF",
       ),
-    ).toContain("not via juspay-run/proxychains")
+    ).toContain("not through that proxy")
   })
 
-  test("asks whether the CA host is reachable otherwise", () => {
-    expect(caUnreachableHint("pu", "connection refused")).toContain("Is pu reachable?")
+  test("tells how to join Tailscale otherwise", () => {
+    const hint = caUnreachableHint("pu", "connection refused")
+    expect(hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
+    expect(hint).not.toContain("Is pu reachable?")
   })
 })
 
@@ -62,8 +64,9 @@ exit 1
     const error = result.failure
     expect(error).toBeInstanceOf(AuthError)
     if (!(error instanceof AuthError)) return
-    expect(error.message).toContain("error downloading root certificate")
-    expect(error.hint).toContain("Is pu reachable?")
+    expect(error.message).toContain("Could not reach the SSH CA at pu")
+    expect(error.hint).toContain("error downloading root certificate")
+    expect(error.hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
   })
 
   test("a present-but-broken step is not reported as missing from PATH", async () => {
@@ -82,7 +85,7 @@ exit 1
     if (!Result.isFailure(result)) return
     expect(result.failure).toBeInstanceOf(AuthError)
     if (!(result.failure instanceof AuthError)) return
-    expect(result.failure.message).toContain("failed (exit 2)")
-    expect(result.failure.message).not.toContain("PATH")
+    expect(result.failure.message).toContain("exited 2")
+    expect(result.failure.message).not.toContain("is not on PATH")
   })
 })

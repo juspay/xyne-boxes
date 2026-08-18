@@ -3,7 +3,14 @@ import type { PlatformError } from "effect/PlatformError"
 import { type ResolvedConfig, identityPaths } from "./config.ts"
 import { AuthError, MissingTool } from "./errors.ts"
 import { lastProcessLine, runCaptured, runExitCode, type ProcessReq } from "./process.ts"
+import {
+  CURL_INSTALL,
+  caUnreachableHint,
+  caUnreachableMessage,
+} from "./recover.ts"
 import { resolveStep } from "./tools.ts"
+
+export { caUnreachableHint } from "./recover.ts"
 
 export interface AuthHooks {
   readonly onSigning?: () => void
@@ -31,13 +38,6 @@ const MAC_OPT =
 
 const macArgs = ["-o", MAC_OPT] as const
 
-export const caUnreachableHint = (host: string, detail: string): string => {
-  if (/socks|proxychains/i.test(detail)) {
-    return `A proxy is intercepting the CA at ${host}. Run xyne-boxes directly (not via juspay-run/proxychains) on the Juspay Tailscale/headscale network.`
-  }
-  return `Is ${host} reachable? Join the Juspay Tailscale/headscale network, then retry.`
-}
-
 export const stepEnv = (
   config: ResolvedConfig,
 ): Record<string, string> => ({
@@ -54,14 +54,13 @@ const requireStep = Effect.gen(function* () {
   if (code === 127) {
     return yield* new MissingTool({
       tool: "step",
-      hint:
-        "Install with: curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh",
+      hint: `Install it with the curl installer (also drops official step):\n\n  ${CURL_INSTALL}`,
     })
   }
   if (code !== 0) {
     return yield* new AuthError({
-      message: `step is installed but failed (exit ${code}).`,
-      hint: "Reinstall with the curl installer, or set XYNE_STEP to a working binary.",
+      message: `step at ${step} exited ${code} (it is installed; this is not a missing PATH).`,
+      hint: `Reinstall:\n\n  ${CURL_INSTALL}\n\nOr set XYNE_STEP to a working binary.`,
     })
   }
 })
@@ -103,8 +102,10 @@ export const ensureAuth = (
         paths.key,
       ])
       if (generated.exitCode !== 0) {
+        const detail = lastProcessLine(generated)
         return yield* new AuthError({
-          message: lastProcessLine(generated) || "ssh-keygen failed",
+          message: detail || `ssh-keygen failed writing ${paths.key}.`,
+          hint: "OpenSSH ssh-keygen must be on PATH. Stock macOS and Linux ship it as ssh-keygen.",
         })
       }
     }
@@ -118,9 +119,10 @@ export const ensureAuth = (
       const bootstrapped = yield* runCaptured(step, ["ca", "bootstrap", "--force"], { env })
       if (bootstrapped.exitCode !== 0) {
         const detail = lastProcessLine(bootstrapped)
+        const said = detail !== "" ? `step said: ${detail}` : undefined
         return yield* new AuthError({
-          message: detail || "Could not reach the certificate authority.",
-          hint: caUnreachableHint(config.host, detail),
+          message: caUnreachableMessage(config.host, config.stepCaUrl),
+          hint: [said, caUnreachableHint(config.host, detail)].filter(Boolean).join("\n\n"),
         })
       }
     }
@@ -164,7 +166,7 @@ export const ensureAuth = (
       if (signed !== 0) {
         return yield* new AuthError({
           message: `Could not sign an SSH certificate (step exited ${signed}).`,
-          hint: "Open the printed link, enter the code, and sign in with your Juspay Google account.",
+          hint: "step prints a URL and a code. Open the URL, enter the code, sign in with your Juspay Google account, then rerun the same command.",
         })
       }
       yield* fs.writeFileString(paths.provisionerFile, `${config.provisioner}\n`)

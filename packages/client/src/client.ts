@@ -92,7 +92,10 @@ export class Client {
     const self = this
     return Effect.gen(function* () {
       if (names.length === 0) {
-        return yield* new UsageError({ message: "destroy requires at least one name" })
+        return yield* new UsageError({
+          message: "destroy needs at least one box name.",
+          hint: "xyne-boxes destroy <name> [name …]",
+        })
       }
       for (const name of names) yield* requireName(name)
       const auth = yield* self.ensureAuth(hooks)

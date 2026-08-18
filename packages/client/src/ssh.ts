@@ -30,11 +30,9 @@ shift
         if [ "$reported_auth_failure" = false ]; then
           reported_auth_failure=true
           cat >&2 <<MESSAGE
-xyne-boxes: SSH authentication failed. Your certificate may have expired.
+xyne-boxes: SSH authentication failed. The certificate is missing or expired.
 
-Renew it by connecting again:
   xyne-boxes connect $name
-  nix run https://github.com/juspay/xyne-boxes/archive/main.zip -- connect $name
 MESSAGE
         fi
         ;;
