@@ -1,8 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="xyne-boxes — a Linux box faster than your MacBook">
-  <rect width="1200" height="630" fill="#0e1628"/>
-  <text x="72" y="120" font-family="Newsreader, Times New Roman, serif" font-size="36" font-weight="600" fill="#e8a317">xyne-boxes</text>
-  <text x="72" y="300" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#f3ead8">A Linux box faster</text>
-  <text x="72" y="380" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#f3ead8">than your MacBook.</text>
-  <text x="72" y="540" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#c9bda6">JUSPAY · INCUS · TAILSCALE</text>
-  <text x="1128" y="540" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#e8a317">github.com/juspay/xyne-boxes</text>
+  <rect width="1200" height="630" fill="#f5f7fb"/>
+  <g transform="translate(72 68) scale(2.15)">
+    <path fill="#2ee59a" d="M16 3.4 28.4 10.4 16 17.4 3.6 10.4Z"/>
+    <path fill="#00a36a" d="M3.6 10.4 16 17.4v12.2L3.6 22.6Z"/>
+    <path fill="#0b63e5" d="M28.4 10.4 16 17.4v12.2l12.4-7Z"/>
+    <path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="square" d="M19.4 16.2 26.4 25.6 M26.4 16.2 19.4 25.6"/>
+  </g>
+  <text x="168" y="118" font-family="Newsreader, Times New Roman, serif" font-size="36" font-weight="600" fill="#12151c">xyne-boxes</text>
+  <text x="72" y="300" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#12151c">A Linux box faster</text>
+  <text x="72" y="380" font-family="Newsreader, Times New Roman, serif" font-size="64" font-weight="600" fill="#12151c">than your MacBook.</text>
+  <text x="72" y="540" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#3b4556">JUSPAY · INCUS · TAILSCALE</text>
+  <text x="1128" y="540" text-anchor="end" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="20" fill="#0b63e5">github.com/juspay/xyne-boxes</text>
 </svg>
