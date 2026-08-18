@@ -319,7 +319,7 @@
               <div class="n">01</div>
               <div>
                 <h3>Install the CLI</h3>
-                <p>On a pristine Mac (Apple Silicon) or Linux x86_64, install the CLI (and <code>step</code>) with no Nix. Or <a href="https://juspay.github.io/nixone/">install Nix</a> and skip this — every command can be <code>nix run …</code> instead.</p>
+                <p>On a pristine Mac (Apple Silicon) or Linux x86_64, install the CLI (and <code>step</code>) with no Nix. Or <a href="https://juspay.github.io/nixone/">install Nix</a> and skip this — every command can be <code>nix run github:juspay/xyne-boxes</code> instead.</p>
                 <div class="snip long">
                   <pre><span class="p">$</span><code id="cmd-curl">curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh</code></pre>
                   <button type="button" class="copy" data-copy="#cmd-curl" aria-label="Copy" title="Copy">
@@ -387,7 +387,7 @@ chmod +x /usr/local/bin/tailscale</code></pre>
                 <details class="note">
                   <summary>Using Nix instead of the curl installer?</summary>
                   <div class="body">
-                    <p>Prefix every command with <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. Example: <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip create &lt;name&gt;</code>.</p>
+                    <p>Prefix every command with <code>nix run github:juspay/xyne-boxes --</code>. Example: <code>nix run github:juspay/xyne-boxes -- create &lt;name&gt;</code>.</p>
                   </div>
                 </details>
                 <details class="note">
@@ -456,7 +456,7 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
         <article id="cli">
           <p class="label">03 · Reference</p>
           <h2>Every command</h2>
-          <p class="lede">After the curl installer the command is <code>xyne-boxes</code>. If you skipped it, prefix with <code>nix run https://github.com/juspay/xyne-boxes/archive/main.zip</code>. Copy pastes the installed form.</p>
+          <p class="lede">After the curl installer the command is <code>xyne-boxes</code>. If you skipped it, prefix with <code>nix run github:juspay/xyne-boxes --</code>. Copy pastes the installed form.</p>
           <table class="cli">
             <thead><tr><th>Command</th><th>Does</th></tr></thead>
             <tbody>
