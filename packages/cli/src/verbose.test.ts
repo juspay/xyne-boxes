@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { takeVerbose } from "./verbose.ts"
+import { isVerbose, takeVerbose } from "./verbose.ts"
 
 describe("takeVerbose", () => {
   test("strips -v and --verbose before --", () => {
@@ -17,5 +17,7 @@ describe("takeVerbose", () => {
 
   test("XYNE_VERBOSE=1 is enough", () => {
     expect(takeVerbose(["list"], { XYNE_VERBOSE: "1" }).verbose).toBe(true)
+    expect(isVerbose({ XYNE_VERBOSE: "1" })).toBe(true)
+    expect(isVerbose({})).toBe(false)
   })
 })

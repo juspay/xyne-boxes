@@ -19,6 +19,7 @@ import {
   UsageError,
   type ListRow,
 } from "xyne-boxes"
+import { isVerbose } from "./verbose.ts"
 
 const gold = fg("#e8a317")
 const ok = fg("#6fcf8e")
@@ -98,7 +99,7 @@ ${ink(otBold("Commands"))}
   ${gold("help")}                            This screen
 
 ${ink(otBold("Options"))}
-  ${gold("-v")}, ${gold("--verbose")}           Debug logs on stderr (or XYNE_VERBOSE=1)
+  ${gold("-v")}, ${gold("--verbose")}           Debug logs; connect also runs ${gold("ssh -v")}
   ${gold("--version")}                      Same as ${gold("version")}
 
 ${ink(otBold("First time"))}
@@ -114,6 +115,10 @@ export interface Spinner {
 }
 
 export function spinner(message: string): Spinner {
+  // Debug logs and the spinner share stderr; the spinner eats log lines.
+  if (isVerbose()) {
+    return { update() {}, fail() {}, stop() {} }
+  }
   const tty = colorEnabled(process.stderr)
   let current = message
   let i = 0

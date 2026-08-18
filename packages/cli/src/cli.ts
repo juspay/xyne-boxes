@@ -12,6 +12,7 @@ export const main = (
   raw: ReadonlyArray<string> = process.argv.slice(2),
 ): Effect.Effect<number> => {
   const { argv, verbose } = takeVerbose(raw)
+  if (verbose) process.env["XYNE_VERBOSE"] = "1"
   return Command.runWith(root, { version: versionString() })(prepareArgv(argv)).pipe(
     Effect.as(0),
     // Effect CLI already printed usage/help; we only map the exit code.

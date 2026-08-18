@@ -4,6 +4,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { sshArgv, UsageError, waitExitCode } from "xyne-boxes"
 import { parseConnectArgs } from "../connect-args.ts"
 import { printConnecting, spinner } from "../ui.ts"
+import { isVerbose } from "../verbose.ts"
 import { cliName, makeClient } from "./shared.ts"
 
 export const connect = Command.make(
@@ -29,10 +30,13 @@ export const connect = Command.make(
         .pipe(Effect.tapError(() => Effect.sync(() => spin.fail("Could not prepare SSH"))))
       spin.stop()
       printConnecting(parsed.name, parsed.remoteCmd)
+      const alreadySshVerbose = parsed.sshArgs.some((arg) => arg === "-v" || arg === "-vv" || arg === "-vvv")
       const args = sshArgv(config, {
-        sshArgs: parsed.sshArgs,
+        sshArgs: isVerbose() && !alreadySshVerbose ? ["-v", ...parsed.sshArgs] : parsed.sshArgs,
         remoteCmd: parsed.remoteCmd,
       })
+      yield* Effect.logDebug(`ssh ${args.join(" ")}`)
+      yield* Effect.logDebug(`ProxyCommand ${config.proxyCommand}`)
       const handle = yield* ChildProcess.make("ssh", args, {
         stdin: "inherit",
         stdout: "inherit",

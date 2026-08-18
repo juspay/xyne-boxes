@@ -1,10 +1,13 @@
 /** Pull `--verbose` / `-v` off our argv. Leave `-v` after `--` for ssh. */
 
+export const isVerbose = (env: NodeJS.ProcessEnv = process.env): boolean =>
+  env["XYNE_VERBOSE"] === "1" || env["XYNE_VERBOSE"] === "true"
+
 export const takeVerbose = (
   argv: ReadonlyArray<string>,
   env: NodeJS.ProcessEnv = process.env,
 ): { argv: string[]; verbose: boolean } => {
-  const fromEnv = env["XYNE_VERBOSE"] === "1" || env["XYNE_VERBOSE"] === "true"
+  const fromEnv = isVerbose(env)
   const out: string[] = []
   let verbose = fromEnv
   let passthrough = false
