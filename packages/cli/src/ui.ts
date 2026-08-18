@@ -97,6 +97,10 @@ ${ink(otBold("Commands"))}
   ${gold("version")}                         Tool versions and commit
   ${gold("help")}                            This screen
 
+${ink(otBold("Options"))}
+  ${gold("-v")}, ${gold("--verbose")}           Debug logs on stderr (or XYNE_VERBOSE=1)
+  ${gold("--version")}                      Same as ${gold("version")}
+
 ${ink(otBold("First time"))}
   ${muted("A browser window asks you to sign in with your Juspay Google account.")}
   ${muted("Certificates last about a week; connect again to renew.")}

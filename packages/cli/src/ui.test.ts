@@ -11,6 +11,7 @@ describe("helpText", () => {
       expect(text).toContain(command)
     }
     expect(text).toContain("xyne-boxes <command>")
+    expect(text).toContain("--verbose")
   })
 })
 

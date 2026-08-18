@@ -110,12 +110,15 @@ export const ensureAuth = (
       }
     }
 
+    yield* Effect.logDebug(`CA ${config.stepCaUrl} host=${config.host}`)
     const healthy = yield* runExitCode(step, ["ca", "health"], {
       env,
       stdout: "ignore",
       stderr: "ignore",
     }).pipe(Effect.orElseSucceed(() => 1))
+    yield* Effect.logDebug(`step ca health exit=${healthy}`)
     if (healthy !== 0) {
+      yield* Effect.logDebug("step ca bootstrap")
       const bootstrapped = yield* runCaptured(step, ["ca", "bootstrap", "--force"], { env })
       if (bootstrapped.exitCode !== 0) {
         const detail = lastProcessLine(bootstrapped)
@@ -149,6 +152,7 @@ export const ensureAuth = (
       }).pipe(Effect.orElseSucceed(() => 1))) === 0
 
     if (needsRenewal) {
+      yield* Effect.logDebug("signing SSH certificate")
       hooks.onSigning?.()
       const signed = yield* runExitCode(step, [
         "ssh",

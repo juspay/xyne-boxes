@@ -68,6 +68,7 @@ export class Client {
     const self = this
     return Effect.gen(function* () {
       yield* requireName(name)
+      yield* Effect.logDebug(`create ${name}`)
       return yield* self.launch(name, ["create", "base-container", name], hooks)
     })
   }
@@ -81,6 +82,7 @@ export class Client {
     return Effect.gen(function* () {
       yield* requireName(source)
       yield* requireName(name)
+      yield* Effect.logDebug(`fork ${source} → ${name}`)
       return yield* self.launch(name, ["fork", source, name], hooks)
     })
   }
@@ -97,6 +99,7 @@ export class Client {
           hint: "xyne-boxes destroy <name> [name …]",
         })
       }
+      yield* Effect.logDebug(`destroy ${names.join(" ")}`)
       for (const name of names) yield* requireName(name)
       const auth = yield* self.ensureAuth(hooks)
       const listed = yield* controlSsh(self.config, auth, ["destroy", ...names])
@@ -111,6 +114,7 @@ export class Client {
   list(hooks: AuthHooks = {}): Effect.Effect<string, ClientError, ClientReq> {
     const self = this
     return Effect.gen(function* () {
+      yield* Effect.logDebug("list")
       const auth = yield* self.ensureAuth(hooks)
       return yield* controlSsh(self.config, auth, ["list"])
     })
@@ -123,6 +127,7 @@ export class Client {
     const self = this
     return Effect.gen(function* () {
       yield* requireName(name)
+      yield* Effect.logDebug(`sshConfig ${name}`)
       const auth = yield* self.ensureAuth(hooks)
       return yield* writeInstanceSshConfig(self.config, auth, name)
     })

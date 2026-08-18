@@ -79,7 +79,9 @@ export const runExitCode = (
         env: options.env,
         extendEnv: true,
       })
-      return yield* waitExitCode(handle)
+      const exitCode = yield* waitExitCode(handle)
+      yield* Effect.logDebug(`${command} ${args.join(" ")} exit=${exitCode}`)
+      return exitCode
     }),
   )
 
@@ -139,6 +141,7 @@ export const runCaptured = (
       const exitCode = yield* waitExitCode(handle)
       const stdout = yield* Fiber.join(outFiber)
       const stderr = yield* Fiber.join(errFiber)
+      yield* Effect.logDebug(`${command} ${args.join(" ")} exit=${exitCode}`)
       return { stdout, stderr, exitCode }
     }),
   )
