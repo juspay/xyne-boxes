@@ -1,0 +1,25 @@
+{
+  "name": "xyne-boxes-cli",
+  "version": "0.1.0",
+  "description": "xyne-boxes terminal",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "xyne-boxes": "./src/cli.ts"
+  },
+  "scripts": {
+    "start": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@opentui/core": "catalog:",
+    "effect": "catalog:",
+    "xyne-boxes": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

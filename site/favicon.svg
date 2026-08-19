@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="xyne-boxes">
-  <rect width="64" height="64" fill="#0a1020"/>
-  <text x="32" y="46" text-anchor="middle" font-family="Newsreader, Times New Roman, serif" font-weight="600" font-size="40" fill="#e8a317">x</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="xyne-boxes">
+  <rect width="32" height="32" fill="#f5f7fb"/>
+  <path fill="#2ee59a" d="M16 3.4 28.4 10.4 16 17.4 3.6 10.4Z"/>
+  <path fill="#00a36a" d="M3.6 10.4 16 17.4v12.2L3.6 22.6Z"/>
+  <path fill="#0b63e5" d="M28.4 10.4 16 17.4v12.2l12.4-7Z"/>
+  <path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="square" d="M19.4 16.2 26.4 25.6 M26.4 16.2 19.4 25.6"/>
 </svg>

@@ -1,0 +1,91 @@
+import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { afterEach, describe, expect, test } from "bun:test"
+import { NodeServices } from "@effect/platform-node"
+import { Effect, Result } from "effect"
+import { caUnreachableHint, ensureAuth } from "./auth.ts"
+import { resolveConfig } from "./config.ts"
+import { AuthError } from "./errors.ts"
+
+describe("caUnreachableHint", () => {
+  test("detects a socks/proxychains intercept", () => {
+    expect(
+      caUnreachableHint(
+        "pu",
+        "error downloading root certificate: socks connect tcp 127.0.0.1:1080->pu:8443: EOF",
+      ),
+    ).toContain("not through that proxy")
+  })
+
+  test("tells how to join Tailscale otherwise", () => {
+    const hint = caUnreachableHint("pu", "connection refused")
+    expect(hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
+    expect(hint).not.toContain("Is pu reachable?")
+  })
+})
+
+describe("ensureAuth", () => {
+  const prevStep = process.env["XYNE_STEP"]
+
+  afterEach(() => {
+    if (prevStep === undefined) delete process.env["XYNE_STEP"]
+    else process.env["XYNE_STEP"] = prevStep
+  })
+
+  test("maps a failing step bootstrap to AuthError with the CA message", async () => {
+    const root = mkdtempSync(join(tmpdir(), "xyne-auth-"))
+    const step = join(root, "step")
+    writeFileSync(
+      step,
+      `#!/bin/sh
+case "$1 $2" in
+  "version "|"version") echo test; exit 0 ;;
+  "ca health") exit 1 ;;
+  "ca bootstrap") echo "error downloading root certificate: connection refused" >&2; exit 1 ;;
+esac
+exit 1
+`,
+    )
+    chmodSync(step, 0o755)
+    const stateDir = join(root, "state")
+    mkdirSync(stateDir)
+    writeFileSync(join(stateDir, "key"), "dummy-key\n")
+    process.env["XYNE_STEP"] = step
+
+    const result = await Effect.runPromise(
+      ensureAuth(resolveConfig({ host: "pu", useSshCa: true, stateDir })).pipe(
+        Effect.result,
+        Effect.provide(NodeServices.layer),
+      ),
+    )
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) return
+    const error = result.failure
+    expect(error).toBeInstanceOf(AuthError)
+    if (!(error instanceof AuthError)) return
+    expect(error.message).toContain("Could not reach the SSH CA at pu")
+    expect(error.hint).toContain("error downloading root certificate")
+    expect(error.hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
+  })
+
+  test("a present-but-broken step is not reported as missing from PATH", async () => {
+    const root = mkdtempSync(join(tmpdir(), "xyne-auth-"))
+    const step = join(root, "step")
+    writeFileSync(step, "#!/bin/sh\nexit 2\n")
+    chmodSync(step, 0o755)
+    process.env["XYNE_STEP"] = step
+    const result = await Effect.runPromise(
+      ensureAuth(resolveConfig({ host: "pu", useSshCa: true, stateDir: join(root, "state") })).pipe(
+        Effect.result,
+        Effect.provide(NodeServices.layer),
+      ),
+    )
+    expect(Result.isFailure(result)).toBe(true)
+    if (!Result.isFailure(result)) return
+    expect(result.failure).toBeInstanceOf(AuthError)
+    if (!(result.failure instanceof AuthError)) return
+    expect(result.failure.message).toContain("exited 2")
+    expect(result.failure.message).not.toContain("is not on PATH")
+  })
+})

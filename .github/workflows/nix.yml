@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build package
+    name: Build and test
     runs-on: ubuntu-latest
 
     steps:
@@ -19,18 +19,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      - name: Check flake
+      - name: Check flake (unit tests + typecheck + package eval)
         run: nix flake check --print-build-logs
 
       - name: Build package
         run: nix build .#default --print-build-logs
 
-      - name: Verify CLI names
+      - name: Test built CLI
         run: |
+          set -euo pipefail
           nix run . -- version
+          nix run . -- help
           nix shell .#default -c bash -euo pipefail -c 'command -v xyne-boxes; command -v pu; xyne-boxes version; pu version'
+          if nix run . -- create; then
+            echo "create with no name should fail" >&2
+            exit 1
+          fi

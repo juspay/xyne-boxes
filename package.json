@@ -1,0 +1,29 @@
+{
+  "name": "xyne-boxes-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.2.0",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "catalog": {
+      "@effect/platform-node": "4.0.0-rc.110",
+      "@opentui/core": "0.4.5",
+      "@types/bun": "^1.2.0",
+      "effect": "4.0.0-rc.110",
+      "typescript": "^5.8.0"
+    }
+  },
+  "scripts": {
+    "start": "bun packages/cli/src/cli.ts",
+    "typecheck": "tsc --noEmit -p packages/client && tsc --noEmit -p packages/cli",
+    "test": "bun test ./packages/client ./packages/cli",
+    "postinstall": "bun2nix -o bun.nix"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "bun2nix": "^2.0.0",
+    "typescript": "catalog:"
+  }
+}
