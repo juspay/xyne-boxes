@@ -56,6 +56,22 @@ describe("describeError", () => {
     ).toEqual(describeError(error))
   })
 
+  test("renders CommandFailed with full multi-line stderr", () => {
+    const error = new CommandFailed({
+      command: "ssh",
+      args: ["pu@10.10.68.56", "create", "base-container", "foo"],
+      exitCode: 1,
+      stderr: "ERR cluster at capacity\nERR failed to create instance\n",
+    })
+    const view = describeError(error)
+    expect(view.title).toBe("command")
+    expect(view.headline).toBe("ssh exited 1.")
+    expect(view.detail).toContain("ERR cluster at capacity")
+    expect(view.detail).toContain("ERR failed to create instance")
+    expect(view.detail).toContain("Command said:")
+    expect(view.exitCode).toBe(1)
+  })
+
   test("ShowHelp with parse errors surfaces those errors", () => {
     const error = new CliError.ShowHelp({
       commandPath: ["xyne-boxes", "create"],
