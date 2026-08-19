@@ -310,10 +310,10 @@ export function errorWidget(view: ErrorView, columns = process.stderr.columns ??
   return lines
 }
 
-const commandFailedDetail = (argv: string | undefined, last: string): string => {
-  const said = last !== "" ? `Command said: ${last}` : undefined
+const commandFailedDetail = (argv: string | undefined, stderr: string): string => {
+  const said = stderr !== "" ? `Command said: ${stderr}` : undefined
   const ran = argv !== undefined ? `Ran:\n  ${argv}` : undefined
-  if (/connection refused|no route|timed out|network is unreachable|could not resolve/i.test(last)) {
+  if (/connection refused|no route|timed out|network is unreachable|could not resolve/i.test(stderr)) {
     return [
       said,
       ran,
@@ -326,7 +326,7 @@ const commandFailedDetail = (argv: string | undefined, last: string): string => 
       .filter((line) => line !== undefined)
       .join("\n")
   }
-  if (/permission denied|certificate/i.test(last)) {
+  if (/permission denied|certificate/i.test(stderr)) {
     return [
       said,
       ran,
@@ -388,13 +388,8 @@ export function describeError(error: unknown): ErrorView {
     }
   }
   if (error instanceof CommandFailed || tag === "CommandFailed") {
-    const stderr = asString(field(error, "stderr"))
-    const last =
-      stderr
-        ?.trim()
-        .split(/\r?\n/)
-        .filter((line) => line.trim() !== "")
-        .at(-1) ?? ""
+    const stderr =
+      (asString(field(error, "stderr")) ?? "").trim().split(/\r?\n/).filter((line) => line.trim() !== "").join("\n")
     const exitCodeRaw = field(error, "exitCode")
     const exitCode = typeof exitCodeRaw === "number" && exitCodeRaw !== 0 ? exitCodeRaw : 1
     const command = asString(field(error, "command"))
@@ -406,7 +401,7 @@ export function describeError(error: unknown): ErrorView {
     return {
       title: "command",
       headline: `${command ?? "command"} exited ${exitCode}.`,
-      detail: commandFailedDetail(argv, last),
+      detail: commandFailedDetail(argv, stderr),
       exitCode,
     }
   }
