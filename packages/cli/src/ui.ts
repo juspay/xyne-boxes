@@ -104,7 +104,7 @@ ${ink(otBold("Options"))}
 
 ${ink(otBold("First time"))}
   ${muted("A browser window asks you to sign in with your Juspay Google account.")}
-  ${muted("Certificates last about a week; connect again to renew.")}
+  ${muted("Certificates last about three months; connect again to renew.")}
 `
 }
 

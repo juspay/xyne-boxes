@@ -144,7 +144,7 @@ export const ensureAuth = (
         "needs-renewal",
         paths.cert,
         "--expires-in",
-        "75%",
+        "168h",
       ], {
         env,
         stdout: "ignore",

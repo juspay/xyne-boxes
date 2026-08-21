@@ -382,7 +382,7 @@ chmod +x /usr/local/bin/tailscale</code></pre>
                   </button>
                 </div>
                 <details class="note">
-                  <summary>First time — and about once a week — you will sign in</summary>
+                  <summary>First time — and about once every three months — you will sign in</summary>
                   <div class="body">
                     <p>The terminal prints a link and a short code. Open <a href="https://www.google.com/device">google.com/device</a>, enter the code, and sign in with your <strong>Juspay Google account</strong>. That issues the SSH certificate.</p>
                   </div>
@@ -533,11 +533,11 @@ grep -qxF 'Include ~/.pu-state/*/ssh_config' ~/.ssh/config \
 
           <div class="fail">
             <h3>Access expired</h3>
-            <p>Certificates last about a week. If you <code>ssh</code> in with the generated config after that, you get:</p>
+            <p>Certificates last about three months. If you <code>ssh</code> in with the generated config after that, you get:</p>
             <div class="err">xyne-boxes: SSH authentication failed. The certificate is missing or expired.
 
   xyne-boxes connect &lt;name&gt;</div>
-            <p>Nothing is broken. <code>xyne-boxes connect &lt;name&gt;</code> renews before it opens SSH. Sign in the same way — about 20 seconds, then you are good for another week.</p>
+            <p>Nothing is broken. <code>xyne-boxes connect &lt;name&gt;</code> renews before it opens SSH. Sign in the same way — about 20 seconds, then you are good for another three months.</p>
             <div class="snip">
               <pre><span class="p">$</span><code id="cmd-renew">xyne-boxes connect &lt;name&gt;</code></pre>
               <button type="button" class="copy" data-copy="#cmd-renew" aria-label="Copy" title="Copy">
