@@ -25,8 +25,12 @@ shift
 "$@" 2> >(
   reported_auth_failure=false
   while IFS= read -r line || [ -n "$line" ]; do
+    # Patterns are parenthesized on both sides. bash 3.2, still the system
+    # bash on macOS, finds the end of a process substitution by matching
+    # parens, so an unbalanced one here truncates the body of the filter
+    # above and breaks the whole script.
     case "$line" in
-      *"Permission denied"*)
+      (*"Permission denied"*)
         if [ "$reported_auth_failure" = false ]; then
           reported_auth_failure=true
           cat >&2 <<MESSAGE
@@ -36,7 +40,7 @@ xyne-boxes: SSH authentication failed. The certificate is missing or expired.
 MESSAGE
         fi
         ;;
-      *) printf '%s\\n' "$line" >&2 ;;
+      (*) printf '%s\\n' "$line" >&2 ;;
     esac
   done
 )

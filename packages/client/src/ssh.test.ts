@@ -49,6 +49,24 @@ describe("SSH_PROXY_SCRIPT", () => {
     expect(SSH_PROXY_SCRIPT).toContain("xyne-boxes connect $name")
     expect(SSH_PROXY_SCRIPT).toContain("certificate is missing or expired")
   })
+
+  // bash 3.2, still the system bash on macOS, finds the end of a process
+  // substitution by matching parens rather than parsing, so an unbalanced `)`
+  // anywhere inside `>(...)` truncates the body and breaks the whole script.
+  test("parens are balanced", () => {
+    let depth = 0
+    for (const ch of SSH_PROXY_SCRIPT) {
+      if (ch === "(") depth++
+      else if (ch === ")") depth--
+      expect(depth).toBeGreaterThanOrEqual(0)
+    }
+    expect(depth).toBe(0)
+  })
+
+  test("bash parses the script", async () => {
+    const proc = Bun.spawn(["bash", "-n"], { stdin: new TextEncoder().encode(SSH_PROXY_SCRIPT) })
+    expect(await proc.exited).toBe(0)
+  })
 })
 
 describe("sshArgv", () => {
