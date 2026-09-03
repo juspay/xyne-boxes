@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseList } from "./list.ts"
+import { namesFromList, parseList } from "./list.ts"
 
 describe("parseList", () => {
   test("skips a header and splits name + location", () => {
@@ -45,5 +45,30 @@ kolu-bot | dev-x86-64-linux-08 |
     expect(parseList("box host extra bits")).toEqual([
       { name: "box", location: "host", extra: ["extra", "bits"] },
     ])
+  })
+})
+
+describe("namesFromList", () => {
+  test("returns valid unique names in order", () => {
+    expect(
+      namesFromList(`NAME | LOCATION |
+headscale-in1 | dev-x86-64-linux-03 |
+kolu-bot | dev-x86-64-linux-08 |
+headscale-in1 | dev-x86-64-linux-03 |
+`),
+    ).toEqual(["headscale-in1", "kolu-bot"])
+  })
+
+  test("empty listing means prune everything", () => {
+    expect(namesFromList("\n")).toEqual([])
+    expect(namesFromList("")).toEqual([])
+  })
+
+  test("drops invalid names and refuses to parse leftover junk", () => {
+    expect(namesFromList("foo/bar host\n!!! nope\n")).toBeUndefined()
+  })
+
+  test("keeps a mix that still has at least one valid name", () => {
+    expect(namesFromList("ok-box host\nfoo/bar host\n")).toEqual(["ok-box"])
   })
 })

@@ -10,4 +10,4 @@ export const list = Command.make("list", {}, () =>
     const listed = yield* client.list()
     printList(parseList(listed), listed)
   }),
-).pipe(Command.withDescription("List your boxes"))
+).pipe(Command.withDescription("List your boxes and refresh local SSH config"))

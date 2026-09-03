@@ -69,7 +69,7 @@ const program = Effect.gen(function* () {
 | Method | Result |
 | --- | --- |
 | `create(name)` / `fork(source, name)` | `{ name }` after the box is ready |
-| `list()` | raw listing from the control plane |
+| `list()` | raw listing from the control plane; writes per-box `ssh_config` and prunes stale local box dirs |
 | `destroy(names)` | control-plane output; local state for those names is removed |
 | `sshConfig(name)` | identity, proxy, `ssh_config` path, and argv prefix |
 | `ensureAuth()` | cert / key material used by the methods above |

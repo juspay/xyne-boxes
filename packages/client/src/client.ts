@@ -7,12 +7,14 @@ import {
   resolveConfig,
 } from "./config.ts"
 import { AuthError, CommandFailed, MissingTool, UsageError } from "./errors.ts"
+import { namesFromList } from "./list.ts"
 import { invalidBoxName } from "./names.ts"
 import type { ProcessReq } from "./process.ts"
 import {
   controlSsh,
   controlSshOk,
   type SshConfig,
+  syncInstanceSshConfigs,
   writeInstanceSshConfig,
 } from "./ssh.ts"
 
@@ -116,7 +118,14 @@ export class Client {
     return Effect.gen(function* () {
       yield* Effect.logDebug("list")
       const auth = yield* self.ensureAuth(hooks)
-      return yield* controlSsh(self.config, auth, ["list"])
+      const listed = yield* controlSsh(self.config, auth, ["list"])
+      const names = namesFromList(listed)
+      if (names === undefined) {
+        yield* Effect.logDebug("list output did not parse; leaving local ssh_config unchanged")
+      } else {
+        yield* syncInstanceSshConfigs(self.config, auth, names)
+      }
+      return listed
     })
   }
 

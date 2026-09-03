@@ -1,3 +1,5 @@
+import { invalidBoxName } from "./names.ts"
+
 export interface ListRow {
   readonly name: string
   readonly location: string | undefined
@@ -35,4 +37,17 @@ export function parseList(raw: string): ReadonlyArray<ListRow> {
     })
   }
   return rows
+}
+
+/** Names to write as local `ssh_config`. `undefined` if the listing did not parse. */
+export function namesFromList(raw: string): ReadonlyArray<string> | undefined {
+  const names: string[] = []
+  const seen = new Set<string>()
+  for (const row of parseList(raw)) {
+    if (invalidBoxName(row.name) !== undefined || seen.has(row.name)) continue
+    seen.add(row.name)
+    names.push(row.name)
+  }
+  if (names.length === 0 && raw.trim() !== "") return undefined
+  return names
 }
