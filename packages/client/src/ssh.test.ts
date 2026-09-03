@@ -1,6 +1,22 @@
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { describe, expect, test } from "bun:test"
+import { NodeServices } from "@effect/platform-node"
+import { Effect, FileSystem } from "effect"
 import type { Auth } from "./auth.ts"
-import { formatSshConfigFile, sshArgv, SSH_PROXY_SCRIPT, type SshConfig } from "./ssh.ts"
+import { resolveConfig } from "./config.ts"
+import {
+  formatSshConfigFile,
+  sshArgv,
+  SSH_PROXY_SCRIPT,
+  syncInstanceSshConfigs,
+  writeInstanceSshConfig,
+  type SshConfig,
+} from "./ssh.ts"
+
+const runFs = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(NodeServices.layer)))
 
 const caOff: Auth = {
   useSshCa: false,
@@ -104,5 +120,68 @@ describe("sshArgv", () => {
       "-o",
       "StrictHostKeyChecking=no",
     ])
+  })
+})
+
+describe("syncInstanceSshConfigs", () => {
+  const auth: Auth = {
+    useSshCa: true,
+    identityFile: "/tmp/key",
+    certificateFile: "/tmp/key-cert.pub",
+    sshArgs: ["-i", "/tmp/key"],
+    instanceSshArgs: ["-i", "/tmp/key"],
+  }
+
+  const state = () => {
+    const root = mkdtempSync(join(tmpdir(), "xyne-ssh-"))
+    const stateDir = join(root, "state")
+    mkdirSync(stateDir)
+    writeFileSync(join(stateDir, "key"), "dummy-key\n")
+    return resolveConfig({ host: "pu", admin: "toor", useSshCa: true, stateDir })
+  }
+
+  test("writes ssh_config for listed boxes and leaves identity files", async () => {
+    const config = state()
+    await runFs(syncInstanceSshConfigs(config, auth, ["kolu-ci-3", "kolu-bot"]))
+    const snippet = readFileSync(join(config.stateDir, "kolu-ci-3", "ssh_config"), "utf8")
+    expect(snippet).toContain("Host kolu-ci-3")
+    expect(snippet).toContain("User toor")
+    expect(snippet).toContain("IdentityFile /tmp/key")
+    expect(snippet).toContain("pu@pu 'connect kolu-ci-3'")
+    expect(existsSync(join(config.stateDir, "kolu-bot", "ssh_config"))).toBe(true)
+    expect(readFileSync(join(config.stateDir, "key"), "utf8")).toBe("dummy-key\n")
+    expect(existsSync(join(config.stateDir, "ssh-proxy"))).toBe(true)
+  })
+
+  test("prunes box dirs that are no longer listed", async () => {
+    const config = state()
+    mkdirSync(join(config.stateDir, "gone"))
+    writeFileSync(join(config.stateDir, "gone", "ssh_config"), "Host gone\n")
+    mkdirSync(join(config.stateDir, "keep"))
+    writeFileSync(join(config.stateDir, "keep", "ssh_config"), "Host keep\n")
+    await runFs(syncInstanceSshConfigs(config, auth, ["keep", "fresh"]))
+    expect(existsSync(join(config.stateDir, "gone"))).toBe(false)
+    expect(existsSync(join(config.stateDir, "keep", "ssh_config"))).toBe(true)
+    expect(existsSync(join(config.stateDir, "fresh", "ssh_config"))).toBe(true)
+    expect(existsSync(join(config.stateDir, "key"))).toBe(true)
+  })
+
+  test("empty names prunes every box dir", async () => {
+    const config = state()
+    mkdirSync(join(config.stateDir, "stale"))
+    writeFileSync(join(config.stateDir, "stale", "ssh_config"), "Host stale\n")
+    mkdirSync(join(config.stateDir, "notes"))
+    writeFileSync(join(config.stateDir, "notes", "readme"), "not a box\n")
+    await runFs(syncInstanceSshConfigs(config, auth, []))
+    expect(existsSync(join(config.stateDir, "stale"))).toBe(false)
+    expect(existsSync(join(config.stateDir, "notes", "readme"))).toBe(true)
+    expect(existsSync(join(config.stateDir, "key"))).toBe(true)
+  })
+
+  test("writeInstanceSshConfig reuses a shared proxy path", async () => {
+    const config = state()
+    const written = await runFs(writeInstanceSshConfig(config, auth, "solo", "/opt/ssh-proxy"))
+    expect(written.proxyCommand).toContain("/opt/ssh-proxy solo")
+    expect(existsSync(join(config.stateDir, "ssh-proxy"))).toBe(false)
   })
 })

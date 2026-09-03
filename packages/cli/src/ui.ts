@@ -92,7 +92,7 @@ ${ink(otBold("Usage"))}
 ${ink(otBold("Commands"))}
   ${gold("create")}   ${muted("<name>")}                 Create a box
   ${gold("connect")}  ${muted("<name> [ssh …]")}        SSH in; ${muted("--")} before a remote command
-  ${gold("list")}                            List your boxes
+  ${gold("list")}                            List boxes; refresh local SSH config
   ${gold("fork")}     ${muted("<source> <name>")}          Clone an existing box
   ${gold("destroy")}  ${muted("<name> […]")}            Destroy one or more boxes
   ${gold("version")}                         Tool versions and commit

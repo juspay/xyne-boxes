@@ -24,7 +24,7 @@ export {
   caUnreachableHint,
   caUnreachableMessage,
 } from "./recover.ts"
-export { parseList, type ListRow } from "./list.ts"
+export { parseList, namesFromList, type ListRow } from "./list.ts"
 export { invalidBoxName } from "./names.ts"
 export { resolveStep } from "./tools.ts"
 export { waitExitCode } from "./process.ts"

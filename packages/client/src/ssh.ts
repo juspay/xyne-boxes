@@ -82,36 +82,37 @@ export const writeSshProxy = (
     return path
   })
 
-export const proxyCommand = (
-  config: ResolvedConfig,
+export function formatProxyCommand(
+  proxy: string,
   auth: Auth,
+  host: string,
   name: string,
-): Effect.Effect<string, PlatformError, FileSystem.FileSystem> =>
-  Effect.gen(function* () {
-    const proxy = yield* writeSshProxy(config)
-    return shellQuoteAll([
-      proxy,
-      name,
-      "ssh",
-      "-o",
-      "BatchMode=yes",
-      "-T",
-      ...auth.sshArgs,
-      `pu@${config.host}`,
-      `connect ${name}`,
-    ])
-  })
+): string {
+  return shellQuoteAll([
+    proxy,
+    name,
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-T",
+    ...auth.sshArgs,
+    `pu@${host}`,
+    `connect ${name}`,
+  ])
+}
 
 export const writeInstanceSshConfig = (
   config: ResolvedConfig,
   auth: Auth,
   name: string,
+  proxyPath?: string,
 ): Effect.Effect<SshConfig, PlatformError, FileSystem.FileSystem> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const dir = join(config.stateDir, name)
     yield* fs.makeDirectory(dir, { recursive: true })
-    const proxy = yield* proxyCommand(config, auth, name)
+    const proxy = proxyPath ?? (yield* writeSshProxy(config))
+    const command = formatProxyCommand(proxy, auth, config.host, name)
     const configPath = join(dir, "ssh_config")
     yield* fs.writeFileString(
       configPath,
@@ -119,18 +120,18 @@ export const writeInstanceSshConfig = (
         name,
         user: config.admin,
         auth,
-        proxyCommand: proxy,
+        proxyCommand: command,
       }),
     )
     return {
       name,
       user: config.admin,
       configPath,
-      proxyCommand: proxy,
+      proxyCommand: command,
       sshArgs: [
         ...auth.instanceSshArgs,
         "-o",
-        `ProxyCommand=${proxy}`,
+        `ProxyCommand=${command}`,
         "-o",
         "ForwardAgent=yes",
         "-o",
@@ -139,6 +140,31 @@ export const writeInstanceSshConfig = (
         "UserKnownHostsFile=/dev/null",
       ],
       destination: name,
+    }
+  })
+
+/** Write `ssh_config` for `names` and delete local box dirs that are no longer listed. */
+export const syncInstanceSshConfigs = (
+  config: ResolvedConfig,
+  auth: Auth,
+  names: ReadonlyArray<string>,
+): Effect.Effect<void, PlatformError, FileSystem.FileSystem> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    yield* fs.makeDirectory(config.stateDir, { recursive: true })
+    const proxy = yield* writeSshProxy(config)
+    const keep = new Set(names)
+    for (const name of names) {
+      yield* writeInstanceSshConfig(config, auth, name, proxy)
+    }
+    const entries = yield* fs.readDirectory(config.stateDir)
+    for (const entry of entries) {
+      if (keep.has(entry)) continue
+      const boxDir = join(config.stateDir, entry)
+      const info = yield* fs.stat(boxDir)
+      if (info.type !== "Directory") continue
+      if (!(yield* fs.exists(join(boxDir, "ssh_config")))) continue
+      yield* fs.remove(boxDir, { recursive: true, force: true })
     }
   })
 
