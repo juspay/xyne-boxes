@@ -121,7 +121,9 @@ export class Client {
       const listed = yield* controlSsh(self.config, auth, ["list"])
       const names = namesFromList(listed)
       if (names === undefined) {
-        yield* Effect.logDebug("list output did not parse; leaving local ssh_config unchanged")
+        yield* Effect.logWarning(
+          "Could not parse box names from the listing; left local SSH config unchanged.",
+        )
       } else {
         yield* syncInstanceSshConfigs(self.config, auth, names)
       }

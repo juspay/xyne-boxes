@@ -26,7 +26,7 @@ export const main = (
     Effect.scoped,
     Effect.provide(NodeServices.layer),
     Effect.provide(Logger.layer([Logger.consolePretty({ stderr: true })])),
-    Effect.provideService(References.MinimumLogLevel, verbose ? "Debug" : "Error"),
+    Effect.provideService(References.MinimumLogLevel, verbose ? "Debug" : "Warning"),
   )
 }
 
