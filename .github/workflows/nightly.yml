@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   # Keep pull_request checks from cancelling the push that publishes `nightly`.
@@ -103,8 +103,11 @@ jobs:
 
   publish:
     name: Publish nightly tag
+    if: github.event_name != 'pull_request'
     needs: [compile, install-e2e]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -127,7 +130,6 @@ jobs:
           ls -lh dist
 
       - name: Recreate the Nightly prerelease
-        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
