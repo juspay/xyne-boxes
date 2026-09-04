@@ -11,6 +11,10 @@
     url = "https://github.com/smallstep/cli/releases/download/v0.30.6/step_darwin_0.30.6_arm64.tar.gz";
     flake = false;
   };
+  inputs.step-darwin-x64 = {
+    url = "https://github.com/smallstep/cli/releases/download/v0.30.6/step_darwin_0.30.6_amd64.tar.gz";
+    flake = false;
+  };
 
   outputs =
     { self
@@ -18,6 +22,7 @@
     , bun2nix
     , step-linux-x64
     , step-darwin-arm64
+    , step-darwin-x64
     , ...
     }:
     let
@@ -48,9 +53,11 @@
             };
           step-linux-x64-bin = officialStep step-linux-x64 true "step-linux-x64";
           step-darwin-arm64-bin = officialStep step-darwin-arm64 true "step-darwin-arm64";
+          step-darwin-x64-bin = officialStep step-darwin-x64 true "step-darwin-x64";
           step =
             if system == "x86_64-linux" then officialStep step-linux-x64 false "step"
             else if system == "aarch64-darwin" then officialStep step-darwin-arm64 false "step"
+            else if system == "x86_64-darwin" then officialStep step-darwin-x64 false "step"
             else pkgs.step-cli;
           workspace = pkgs.callPackage ./nix/workspace.nix {
             root = ./.;
@@ -72,6 +79,7 @@
             inherit step;
             step-linux-x64 = step-linux-x64-bin;
             step-darwin-arm64 = step-darwin-arm64-bin;
+            step-darwin-x64 = step-darwin-x64-bin;
           };
           checks = {
             client-tests = client.tests;
@@ -80,7 +88,7 @@
             cli-typecheck = cli.typecheck;
             inherit installer-test;
             package = cli.xyne-boxes;
-            inherit step-linux-x64-bin step-darwin-arm64-bin;
+            inherit step-linux-x64-bin step-darwin-arm64-bin step-darwin-x64-bin;
           };
         };
     in
