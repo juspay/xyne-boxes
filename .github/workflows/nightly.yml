@@ -26,8 +26,13 @@ jobs:
         include:
           - os: macos-latest
             asset: xyne-boxes-darwin-arm64
+            target: bun
+          - os: macos-latest
+            asset: xyne-boxes-darwin-x64
+            target: bun-darwin-x64
           - os: ubuntu-latest
             asset: xyne-boxes-linux-x64
+            target: bun
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -51,14 +56,19 @@ jobs:
         run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/cli/src/commit.ts
 
       - name: Compile
-        run: bun build --compile --outfile "${{ matrix.asset }}" packages/cli/src/cli.ts
+        run: bun build --compile --target "${{ matrix.target }}" --outfile "${{ matrix.asset }}" packages/cli/src/cli.ts
 
-      - name: Smoke the binary
+      - name: Ad-hoc codesign (macOS)
+        if: runner.os == 'macOS'
         run: |
           chmod +x "${{ matrix.asset }}"
-          if [ "$(uname -s)" = Darwin ]; then
-            codesign --force --sign - "${{ matrix.asset }}"
-          fi
+          codesign --force --sign - "${{ matrix.asset }}"
+
+      - name: Smoke the binary
+        # Cross-compiled targets cannot run on this runner.
+        if: matrix.target == 'bun'
+        run: |
+          chmod +x "${{ matrix.asset }}"
           "./${{ matrix.asset }}" version
           "./${{ matrix.asset }}" version | grep -F "${GITHUB_SHA}"
           "./${{ matrix.asset }}" help
@@ -80,6 +90,9 @@ jobs:
         include:
           - os: macos-latest
             boxes: xyne-boxes-darwin-arm64
+          # macos-15-intel is the GitHub-hosted Intel macOS runner.
+          - os: macos-15-intel
+            boxes: xyne-boxes-darwin-x64
           - os: ubuntu-latest
             boxes: xyne-boxes-linux-x64
     steps:
@@ -136,7 +149,7 @@ jobs:
           TAG=nightly
           NOTES="Moving \`nightly\` from \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA}\`).
 
-          Pristine macOS (Apple Silicon) and Linux x86_64:
+          Pristine macOS (Apple Silicon and Intel) and Linux x86_64:
 
           \`\`\`
           curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
@@ -145,7 +158,7 @@ jobs:
           \`xyne-boxes version\` prints this commit. The installer also drops official \`step\` (no preinstall). System \`ssh\` is still required."
           git tag -f "$TAG" "${GITHUB_SHA}"
           git push -f origin "refs/tags/${TAG}"
-          assets="dist/xyne-boxes-darwin-arm64 dist/xyne-boxes-linux-x64 dist/step-darwin-arm64 dist/step-linux-x64 dist/install.sh dist/COMMIT dist/SHA256SUMS"
+          assets="dist/xyne-boxes-darwin-arm64 dist/xyne-boxes-darwin-x64 dist/xyne-boxes-linux-x64 dist/step-darwin-arm64 dist/step-darwin-x64 dist/step-linux-x64 dist/install.sh dist/COMMIT dist/SHA256SUMS"
           if gh release view "$TAG" >/dev/null 2>&1; then
             # Do not delete-then-recreate: a cancelled run would 404 the curl | sh URL.
             gh release upload "$TAG" $assets --clobber
