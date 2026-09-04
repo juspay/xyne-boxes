@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install xyne-boxes + step on a pristine Mac (Apple Silicon) or Linux x86_64.
+# Install xyne-boxes + step on a pristine Mac (Apple Silicon or Intel) or Linux x86_64.
 # No Nix, no Homebrew, no preinstalled step.
 #
 #   curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh
@@ -12,7 +12,7 @@ COMMIT="${XYNE_BOXES_COMMIT:-__XYNE_COMMIT__}"
 
 os=$(uname -s)
 arch=$(uname -m)
-# Rosetta reports x86_64 on Apple Silicon; the binary we ship is arm64.
+# Rosetta reports x86_64 on Apple Silicon; prefer the native arm64 binary there.
 if [ "$os" = Darwin ] && [ "$arch" = x86_64 ]; then
   if [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || true)" = "1" ]; then
     arch=arm64
@@ -23,13 +23,17 @@ case "${os}-${arch}" in
     boxes_asset="xyne-boxes-darwin-arm64"
     step_asset="step-darwin-arm64"
     ;;
+  Darwin-x86_64)
+    boxes_asset="xyne-boxes-darwin-x64"
+    step_asset="step-darwin-x64"
+    ;;
   Linux-x86_64)
     boxes_asset="xyne-boxes-linux-x64"
     step_asset="step-linux-x64"
     ;;
   *)
     echo "xyne-boxes: unsupported platform ${os}/${arch}" >&2
-    echo "supported: macOS Apple Silicon, Linux x86_64" >&2
+    echo "supported: macOS (Apple Silicon, Intel), Linux x86_64" >&2
     exit 1
     ;;
 esac

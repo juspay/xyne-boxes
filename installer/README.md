@@ -1,6 +1,6 @@
 # installer/
 
-Curl install for a **pristine** macOS (Apple Silicon) or Linux x86_64 machine. No Nix, no Homebrew, no preinstalled `step`.
+Curl install for a **pristine** macOS (Apple Silicon or Intel) or Linux x86_64 machine. No Nix, no Homebrew, no preinstalled `step`.
 
 ```
 curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh

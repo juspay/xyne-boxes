@@ -1,6 +1,6 @@
 #!/bin/sh
 # Fill a dist dir with official step, stamped install.sh, COMMIT, SHA256SUMS.
-# Expects xyne-boxes-darwin-arm64 and/or xyne-boxes-linux-x64 already there.
+# Expects xyne-boxes-darwin-arm64, xyne-boxes-darwin-x64 and/or xyne-boxes-linux-x64 already there.
 # Usage: assemble-release.sh <dist-dir>
 set -eu
 
@@ -25,6 +25,10 @@ has=
 if [ -e "$dist/xyne-boxes-darwin-arm64" ]; then
   has=1
   need_step step-darwin-arm64
+fi
+if [ -e "$dist/xyne-boxes-darwin-x64" ]; then
+  has=1
+  need_step step-darwin-x64
 fi
 if [ -e "$dist/xyne-boxes-linux-x64" ]; then
   has=1
@@ -59,8 +63,8 @@ digest() {
 (
   cd "$dist"
   set --
-  for f in xyne-boxes-darwin-arm64 xyne-boxes-linux-x64 \
-    step-darwin-arm64 step-linux-x64 install.sh COMMIT; do
+  for f in xyne-boxes-darwin-arm64 xyne-boxes-darwin-x64 xyne-boxes-linux-x64 \
+    step-darwin-arm64 step-darwin-x64 step-linux-x64 install.sh COMMIT; do
     [ -e "$f" ] && set -- "$@" "$f"
   done
   digest "$@"
