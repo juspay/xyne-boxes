@@ -2,6 +2,10 @@
   inputs.nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
   inputs.bun2nix.url = "github:nix-community/bun2nix/2.1.2";
   inputs.bun2nix.inputs.nixpkgs.follows = "nixpkgs";
+  # bun2nix defaults to nix-systems/triplet (no x86_64-darwin); share our
+  # systems input instead.
+  inputs.systems.url = "github:nix-systems/default";
+  inputs.bun2nix.inputs.systems.follows = "systems";
   # Official Smallstep release binaries. Fetched, not compiled.
   inputs.step-linux-x64 = {
     url = "https://github.com/smallstep/cli/releases/download/v0.30.6/step_linux_0.30.6_amd64.tar.gz";
@@ -20,19 +24,14 @@
     { self
     , nixpkgs
     , bun2nix
+    , systems
     , step-linux-x64
     , step-darwin-arm64
     , step-darwin-x64
     , ...
     }:
     let
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "aarch64-darwin"
-        "x86_64-darwin"
-      ];
-      eachSystem = nixpkgs.lib.genAttrs systems;
+      eachSystem = nixpkgs.lib.genAttrs (import systems);
       pkgsFor =
         system:
         import nixpkgs {
