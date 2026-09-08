@@ -55,6 +55,10 @@ jobs:
       - name: Stamp commit into the binary
         run: printf 'export const BAKED_COMMIT = "%s"\n' "${GITHUB_SHA}" > packages/cli/src/commit.ts
 
+      - name: Install darwin-x64 deps for cross-compile
+        if: matrix.target == 'bun-darwin-x64'
+        run: bun install --frozen-lockfile --os=darwin --cpu=x64
+
       - name: Compile
         run: bun build --compile --target "${{ matrix.target }}" --outfile "${{ matrix.asset }}" packages/cli/src/cli.ts
 
