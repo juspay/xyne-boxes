@@ -2,8 +2,7 @@
   inputs.nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
   inputs.bun2nix.url = "github:nix-community/bun2nix/2.1.2";
   inputs.bun2nix.inputs.nixpkgs.follows = "nixpkgs";
-  # bun2nix defaults to nix-systems/triplet (no x86_64-darwin); share our
-  # systems input instead.
+  # bun2nix defaults to nix-systems/triplet (no x86_64-darwin); point it at the shared nix-systems/default input.
   inputs.systems.url = "github:nix-systems/default";
   inputs.bun2nix.inputs.systems.follows = "systems";
   # Official Smallstep release binaries. Fetched, not compiled.
