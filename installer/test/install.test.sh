@@ -11,6 +11,7 @@ os=$(uname -s)
 arch=$(uname -m)
 case "${os}-${arch}" in
   Darwin-arm64) boxes=xyne-boxes-darwin-arm64; step=step-darwin-arm64 ;;
+  Darwin-x86_64) boxes=xyne-boxes-darwin-x64; step=step-darwin-x64 ;;
   Linux-x86_64) boxes=xyne-boxes-linux-x64; step=step-linux-x64 ;;
   *)
     echo "install.test.sh: unsupported ${os}/${arch}" >&2
