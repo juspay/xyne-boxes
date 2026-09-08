@@ -28,7 +28,7 @@ flowchart TB
 
   state["~/.pu-state — key, cert, per-box ssh_config, ssh-proxy"]
   step["step-cli + ssh-keygen"]
-  pu["pu@PU_HOST — create / wait / list / destroy"]
+  pu["pu@PU_HOST — create / fork / list / destroy"]
   box["Box — ssh as toor"]
 
   ext --> Client
@@ -64,7 +64,7 @@ const program = Effect.gen(function* () {
 }).pipe(Effect.provide(NodeServices.layer))
 ```
 
-`Client.make({ host, admin, useSshCa, stateDir, … })` overrides the `PU_*` / `STEP_*` env defaults.
+`Client.make({ host, admin, authMode, stateDir, … })` overrides the `PU_*` / `STEP_*` env defaults.
 
 | Method | Result |
 | --- | --- |

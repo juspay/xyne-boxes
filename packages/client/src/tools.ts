@@ -13,3 +13,9 @@ export function resolveStep(): string {
   }
   return "step"
 }
+
+/** `ssh` from XYNE_SSH or PATH. */
+export function resolveSsh(): string {
+  const fromEnv = process.env["XYNE_SSH"]
+  return fromEnv !== undefined && fromEnv !== "" ? fromEnv : "ssh"
+}

@@ -6,6 +6,7 @@ export {
   type LaunchResult,
 } from "./client.ts"
 export {
+  type AuthMode,
   type ClientOptions,
   type ResolvedConfig,
   resolveConfig,
@@ -26,5 +27,5 @@ export {
 } from "./recover.ts"
 export { parseList, type ListRow } from "./list.ts"
 export { invalidBoxName } from "./names.ts"
-export { resolveStep } from "./tools.ts"
+export { resolveSsh, resolveStep } from "./tools.ts"
 export { waitExitCode } from "./process.ts"

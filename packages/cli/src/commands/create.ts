@@ -13,7 +13,6 @@ export const create = Command.make(
       yield* launchAndAnnounce(
         `Creating ${name}`,
         `Could not create ${name}`,
-        `Waiting for ${name} to be ready`,
         (hooks) => client.create(name, hooks),
       )
     }),

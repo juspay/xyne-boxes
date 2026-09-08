@@ -1,4 +1,4 @@
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, test } from "bun:test"
@@ -54,7 +54,7 @@ exit 1
     process.env["XYNE_STEP"] = step
 
     const result = await Effect.runPromise(
-      ensureAuth(resolveConfig({ host: "pu", useSshCa: true, stateDir })).pipe(
+      ensureAuth(resolveConfig({ host: "pu", authMode: "ssh-ca", stateDir })).pipe(
         Effect.result,
         Effect.provide(NodeServices.layer),
       ),
@@ -76,7 +76,7 @@ exit 1
     chmodSync(step, 0o755)
     process.env["XYNE_STEP"] = step
     const result = await Effect.runPromise(
-      ensureAuth(resolveConfig({ host: "pu", useSshCa: true, stateDir: join(root, "state") })).pipe(
+      ensureAuth(resolveConfig({ host: "pu", authMode: "ssh-ca", stateDir: join(root, "state") })).pipe(
         Effect.result,
         Effect.provide(NodeServices.layer),
       ),
@@ -87,5 +87,30 @@ exit 1
     if (!(result.failure instanceof AuthError)) return
     expect(result.failure.message).toContain("exited 2")
     expect(result.failure.message).not.toContain("is not on PATH")
+  })
+
+  test("host mode uses only host-based SSH authentication without user key material", async () => {
+    const root = mkdtempSync(join(tmpdir(), "xyne-auth-"))
+    const stateDir = join(root, "state")
+    process.env["XYNE_STEP"] = join(root, "missing-step")
+
+    const auth = await Effect.runPromise(
+      ensureAuth(resolveConfig({ authMode: "host", stateDir })).pipe(
+        Effect.provide(NodeServices.layer),
+      ),
+    )
+
+    expect(auth.controlOptions).toContainEqual(["HostbasedAuthentication", "yes"])
+    expect(auth.controlOptions).toContainEqual(["PreferredAuthentications", "hostbased"])
+    expect(auth.controlOptions).toContainEqual(["HostbasedAcceptedAlgorithms", "ssh-ed25519"])
+    expect(auth.controlOptions).toContainEqual(["PubkeyAuthentication", "no"])
+    expect(auth.controlOptions).toContainEqual(["GlobalKnownHostsFile", "/etc/ssh/ssh_known_hosts"])
+    expect(auth.controlOptions).toContainEqual(["StrictHostKeyChecking", "yes"])
+    expect(auth.instanceOptions).toContainEqual(["HostbasedAuthentication", "yes"])
+    expect(auth.instanceOptions).toContainEqual(["PreferredAuthentications", "hostbased"])
+    expect(auth.instanceOptions).toContainEqual(["PubkeyAuthentication", "no"])
+    expect(auth.instanceOptions).toContainEqual(["GlobalKnownHostsFile", "/etc/ssh/ssh_known_hosts"])
+    expect(auth.instanceOptions).toContainEqual(["StrictHostKeyChecking", "yes"])
+    expect(existsSync(join(stateDir, "key"))).toBe(false)
   })
 })

@@ -7,46 +7,63 @@ export const DEFAULT_STEP_FINGERPRINT =
   "76bb5cab2458b5331221da3cc6754102189a03184d119b26ce5284b49fa06463"
 export const DEFAULT_PROVISIONER = "GoogleBrowserless"
 
+export type AuthMode = "ssh-ca" | "host"
+
 export interface ClientOptions {
   readonly host?: string
   readonly admin?: string
-  readonly useSshCa?: boolean
+  readonly authMode?: AuthMode
   readonly stepFingerprint?: string
   readonly stepCaUrl?: string
   readonly stateDir?: string
 }
 
-export interface ResolvedConfig {
+interface ResolvedConfigBase {
   readonly host: string
   readonly admin: string
-  readonly useSshCa: boolean
-  readonly stepFingerprint: string
-  readonly stepCaUrl: string
   readonly stateDir: string
   readonly provisioner: string
 }
 
-export function envFlag(value: string | undefined, fallback: boolean): boolean {
-  if (value === undefined) return fallback
-  return value !== "false" && value !== "0"
+export type ResolvedConfig = ResolvedConfigBase &
+  (
+    | { readonly authMode: "host" }
+    | {
+        readonly authMode: "ssh-ca"
+        readonly stepFingerprint: string
+        readonly stepCaUrl: string
+      }
+  )
+
+function envAuthMode(value: string | undefined): AuthMode | undefined {
+  if (value === undefined) return undefined
+  if (value === "ssh-ca" || value === "host") return value
+  throw new Error(`Invalid PU_AUTH_MODE: ${value}`)
 }
 
 export function resolveConfig(options: ClientOptions = {}): ResolvedConfig {
   const host = options.host ?? process.env["PU_HOST"] ?? DEFAULT_HOST
-  const useSshCa = options.useSshCa ?? envFlag(process.env["PU_USE_SSH_CA"], true)
-  return {
+  const authMode =
+    options.authMode ??
+    envAuthMode(process.env["PU_AUTH_MODE"]) ??
+    "ssh-ca"
+  const common = {
     host,
     admin: options.admin ?? process.env["PU_ADMIN"] ?? DEFAULT_ADMIN,
-    useSshCa,
+    stateDir:
+      options.stateDir ?? process.env["PU_STATE_DIR"] ?? join(homedir(), ".pu-state"),
+    provisioner: DEFAULT_PROVISIONER,
+  }
+  if (authMode === "host") return { ...common, authMode }
+  return {
+    ...common,
+    authMode,
     stepFingerprint:
       options.stepFingerprint ??
       process.env["STEP_FINGERPRINT"] ??
       DEFAULT_STEP_FINGERPRINT,
     stepCaUrl:
       options.stepCaUrl ?? process.env["STEP_CA_URL"] ?? `https://${host}:8443`,
-    stateDir:
-      options.stateDir ?? process.env["PU_STATE_DIR"] ?? join(homedir(), ".pu-state"),
-    provisioner: DEFAULT_PROVISIONER,
   }
 }
 

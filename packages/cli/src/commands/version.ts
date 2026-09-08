@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process"
 import { Effect } from "effect"
 import { Command } from "effect/unstable/cli"
 import { commitLabel, packageVersion } from "../build-info.ts"
-import { resolveStep } from "xyne-boxes"
+import { resolveSsh, resolveStep } from "xyne-boxes"
 import { printVersion } from "../ui.ts"
 
 const firstLine = (text: string, fallback: string): string => {
@@ -23,7 +23,7 @@ export const version = Command.make("version", {}, () =>
       ["xyne-boxes", packageVersion],
       ["commit", commitLabel()],
       ["bun", Bun.version],
-      ["ssh", toolVersion("ssh", ["-V"])],
+      ["ssh", toolVersion(resolveSsh(), ["-V"])],
       ["step", toolVersion(resolveStep(), ["version"])],
     ])
   }),

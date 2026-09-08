@@ -1,7 +1,7 @@
 import { Effect } from "effect"
 import { Argument, Command } from "effect/unstable/cli"
 import { ChildProcess } from "effect/unstable/process"
-import { sshArgv, UsageError, waitExitCode } from "xyne-boxes"
+import { resolveSsh, sshArgv, UsageError, waitExitCode } from "xyne-boxes"
 import { parseConnectArgs } from "../connect-args.ts"
 import { printConnecting, spinner } from "../ui.ts"
 import { isVerbose } from "../verbose.ts"
@@ -37,7 +37,7 @@ export const connect = Command.make(
       })
       yield* Effect.logDebug(`ssh ${args.join(" ")}`)
       yield* Effect.logDebug(`ProxyCommand ${config.proxyCommand}`)
-      const handle = yield* ChildProcess.make("ssh", args, {
+      const handle = yield* ChildProcess.make(resolveSsh(), args, {
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",

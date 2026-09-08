@@ -2,18 +2,25 @@ import { describe, expect, test } from "bun:test"
 import type { Auth } from "./auth.ts"
 import { formatSshConfigFile, sshArgv, SSH_PROXY_SCRIPT, type SshConfig } from "./ssh.ts"
 
-const caOff: Auth = {
-  useSshCa: false,
-  sshArgs: [],
-  instanceSshArgs: [],
+const hostAuth: Auth = {
+  controlOptions: [],
+  instanceOptions: [
+    ["HostbasedAuthentication", "yes"],
+    ["PreferredAuthentications", "hostbased"],
+    ["PubkeyAuthentication", "no"],
+    ["GlobalKnownHostsFile", "/etc/ssh/ssh_known_hosts"],
+    ["UserKnownHostsFile", "/dev/null"],
+    ["StrictHostKeyChecking", "yes"],
+  ],
 }
 
 const caOn: Auth = {
-  useSshCa: true,
-  identityFile: "/tmp/key",
-  certificateFile: "/tmp/key-cert.pub",
-  sshArgs: [],
-  instanceSshArgs: [],
+  controlOptions: [],
+  instanceOptions: [
+    ["IdentityFile", "/tmp/key"],
+    ["CertificateFile", "/tmp/key-cert.pub"],
+    ["IdentitiesOnly", "yes"],
+  ],
 }
 
 describe("formatSshConfigFile", () => {
@@ -21,8 +28,11 @@ describe("formatSshConfigFile", () => {
     const text = formatSshConfigFile({
       name: "mybox",
       user: "toor",
-      auth: caOn,
-      proxyCommand: "/tmp/ssh-proxy mybox ssh -T pu@pu connect mybox",
+      options: [
+        ...caOn.instanceOptions,
+        ["ProxyCommand", "/tmp/ssh-proxy mybox ssh -T pu@pu connect mybox"],
+        ["ForwardAgent", "yes"],
+      ],
     })
     expect(text).toContain("Host mybox")
     expect(text).toContain("User toor")
@@ -32,22 +42,27 @@ describe("formatSshConfigFile", () => {
     expect(text).toContain("ForwardAgent yes")
   })
 
-  test("omits identity when CA is off", () => {
+  test("writes the complete host authentication strategy", () => {
     const text = formatSshConfigFile({
       name: "mybox",
       user: "toor",
-      auth: caOff,
-      proxyCommand: "proxy",
+      options: [...hostAuth.instanceOptions, ["ProxyCommand", "proxy"]],
     })
     expect(text).not.toContain("IdentityFile")
     expect(text).not.toContain("CertificateFile")
+    expect(text).toContain("HostbasedAuthentication yes")
+    expect(text).toContain("PreferredAuthentications hostbased")
+    expect(text).toContain("PubkeyAuthentication no")
+    expect(text).toContain("StrictHostKeyChecking yes")
+    expect(text).not.toContain("StrictHostKeyChecking no")
   })
 })
 
 describe("SSH_PROXY_SCRIPT", () => {
-  test("renew hint is the connect command", () => {
+  test("authentication failure hint works for every auth mode", () => {
     expect(SSH_PROXY_SCRIPT).toContain("xyne-boxes connect $name")
-    expect(SSH_PROXY_SCRIPT).toContain("certificate is missing or expired")
+    expect(SSH_PROXY_SCRIPT).toContain("Check this box's access or renew your login")
+    expect(SSH_PROXY_SCRIPT).not.toContain("certificate is missing or expired")
   })
 })
 

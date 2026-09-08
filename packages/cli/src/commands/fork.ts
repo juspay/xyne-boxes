@@ -14,7 +14,6 @@ export const fork = Command.make(
       yield* launchAndAnnounce(
         `Forking ${source} → ${name}`,
         `Could not fork ${name}`,
-        `Waiting for ${name} to be ready`,
         (hooks) => client.fork(source, name, hooks),
       )
     }),

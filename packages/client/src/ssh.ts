@@ -1,11 +1,12 @@
 import { join } from "node:path"
 import { Effect, FileSystem } from "effect"
 import type { PlatformError } from "effect/PlatformError"
-import type { Auth } from "./auth.ts"
+import type { Auth, SshOption } from "./auth.ts"
 import { type ResolvedConfig, identityPaths } from "./config.ts"
 import { CommandFailed } from "./errors.ts"
 import { type ProcessReq, runOk, runString } from "./process.ts"
 import { shellQuoteAll } from "./quote.ts"
+import { resolveSsh } from "./tools.ts"
 
 export interface SshConfig {
   readonly name: string
@@ -30,7 +31,7 @@ shift
         if [ "$reported_auth_failure" = false ]; then
           reported_auth_failure=true
           cat >&2 <<MESSAGE
-xyne-boxes: SSH authentication failed. The certificate is missing or expired.
+xyne-boxes: SSH authentication failed. Check this box's access or renew your login.
 
   xyne-boxes connect $name
 MESSAGE
@@ -42,28 +43,32 @@ MESSAGE
 )
 `
 
+const sshOptionArgs = (
+  options: ReadonlyArray<SshOption>,
+): ReadonlyArray<string> => options.flatMap(([name, value]) => ["-o", `${name}=${value}`])
+
 export function formatSshConfigFile(input: {
   readonly name: string
   readonly user: string
-  readonly auth: Auth
-  readonly proxyCommand: string
+  readonly options: ReadonlyArray<SshOption>
 }): string {
   const lines = [
     `Host ${input.name}`,
     `  User ${input.user}`,
+    ...input.options.map(([name, value]) => `  ${name} ${value}`),
   ]
-  if (input.auth.useSshCa) {
-    lines.push(`  IdentityFile ${input.auth.identityFile}`)
-    lines.push(`  CertificateFile ${input.auth.certificateFile}`)
-    lines.push("  IdentitiesOnly yes")
-  }
-  lines.push(`  ProxyCommand ${input.proxyCommand}`)
-  lines.push("  ForwardAgent yes")
-  lines.push("  StrictHostKeyChecking no")
-  lines.push("  UserKnownHostsFile /dev/null")
   lines.push("")
   return lines.join("\n")
 }
+
+const instanceSshOptions = (
+  auth: Auth,
+  proxy: string,
+): ReadonlyArray<SshOption> => [
+  ...auth.instanceOptions,
+  ["ProxyCommand", proxy],
+  ["ForwardAgent", "yes"],
+]
 
 export const writeSshProxy = (
   config: ResolvedConfig,
@@ -88,11 +93,11 @@ export const proxyCommand = (
     return shellQuoteAll([
       proxy,
       name,
-      "ssh",
+      resolveSsh(),
       "-o",
       "BatchMode=yes",
       "-T",
-      ...auth.sshArgs,
+      ...sshOptionArgs(auth.controlOptions),
       `pu@${config.host}`,
       `connect ${name}`,
     ])
@@ -109,13 +114,13 @@ export const writeInstanceSshConfig = (
     yield* fs.makeDirectory(dir, { recursive: true })
     const proxy = yield* proxyCommand(config, auth, name)
     const configPath = join(dir, "ssh_config")
+    const options = instanceSshOptions(auth, proxy)
     yield* fs.writeFileString(
       configPath,
       formatSshConfigFile({
         name,
         user: config.admin,
-        auth,
-        proxyCommand: proxy,
+        options,
       }),
     )
     return {
@@ -123,17 +128,7 @@ export const writeInstanceSshConfig = (
       user: config.admin,
       configPath,
       proxyCommand: proxy,
-      sshArgs: [
-        ...auth.instanceSshArgs,
-        "-o",
-        `ProxyCommand=${proxy}`,
-        "-o",
-        "ForwardAgent=yes",
-        "-o",
-        "StrictHostKeyChecking=no",
-        "-o",
-        "UserKnownHostsFile=/dev/null",
-      ],
+      sshArgs: sshOptionArgs(options),
       destination: name,
     }
   })
@@ -163,11 +158,11 @@ export const controlSsh = (
   auth: Auth,
   remote: ReadonlyArray<string>,
 ): Effect.Effect<string, CommandFailed | PlatformError, ProcessReq> =>
-  runString("ssh", ["-nT", ...auth.sshArgs, `pu@${config.host}`, ...remote])
+  runString(resolveSsh(), ["-nT", ...sshOptionArgs(auth.controlOptions), `pu@${config.host}`, ...remote])
 
 export const controlSshOk = (
   config: ResolvedConfig,
   auth: Auth,
   remote: ReadonlyArray<string>,
 ): Effect.Effect<void, CommandFailed | PlatformError, ProcessReq> =>
-  runOk("ssh", ["-nT", ...auth.sshArgs, `pu@${config.host}`, ...remote])
+  runOk(resolveSsh(), ["-nT", ...sshOptionArgs(auth.controlOptions), `pu@${config.host}`, ...remote])

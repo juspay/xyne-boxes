@@ -16,7 +16,7 @@ import {
   writeInstanceSshConfig,
 } from "./ssh.ts"
 
-export type { ClientOptions, ResolvedConfig } from "./config.ts"
+export type { AuthMode, ClientOptions, ResolvedConfig } from "./config.ts"
 export type { Auth } from "./auth.ts"
 export type { SshConfig } from "./ssh.ts"
 
@@ -42,8 +42,7 @@ const requireName = (name: string): Effect.Effect<string, UsageError> => {
 }
 
 export interface LaunchHooks extends AuthHooks {
-  readonly onCreating?: () => void
-  readonly onWaiting?: () => void
+  readonly onLaunching?: () => void
 }
 
 export class Client {
@@ -141,10 +140,8 @@ export class Client {
     const self = this
     return Effect.gen(function* () {
       const auth = yield* self.ensureAuth(hooks)
-      hooks.onCreating?.()
+      hooks.onLaunching?.()
       yield* controlSshOk(self.config, auth, remote)
-      hooks.onWaiting?.()
-      yield* controlSshOk(self.config, auth, ["wait", name])
       yield* writeInstanceSshConfig(self.config, auth, name)
       return { name }
     })

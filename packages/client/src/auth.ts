@@ -16,30 +16,34 @@ export interface AuthHooks {
   readonly onSigning?: () => void
 }
 
-type AuthBase = {
-  /** ssh args for the control plane (`pu@host`). */
-  readonly sshArgs: ReadonlyArray<string>
-  /** ssh args for an instance hop (no known-hosts file). */
-  readonly instanceSshArgs: ReadonlyArray<string>
+export type SshOption = readonly [name: string, value: string]
+
+export interface Auth {
+  /** OpenSSH options for the control plane (`pu@host`). */
+  readonly controlOptions: ReadonlyArray<SshOption>
+  /** OpenSSH options for an instance hop. */
+  readonly instanceOptions: ReadonlyArray<SshOption>
 }
 
-export type Auth =
-  | (AuthBase & {
-      readonly useSshCa: false
-    })
-  | (AuthBase & {
-      readonly useSshCa: true
-      readonly identityFile: string
-      readonly certificateFile: string
-    })
+const macOption: SshOption = [
+  "MACs",
+  "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com",
+] as const
 
-const MAC_OPT =
-  "MACs=hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
-
-const macArgs = ["-o", MAC_OPT] as const
+const hostAuthOptions: ReadonlyArray<SshOption> = [
+  ["HostbasedAuthentication", "yes"],
+  ["PreferredAuthentications", "hostbased"],
+  ["HostbasedAcceptedAlgorithms", "ssh-ed25519"],
+  ["PubkeyAuthentication", "no"],
+  ["PasswordAuthentication", "no"],
+  ["KbdInteractiveAuthentication", "no"],
+  ["GlobalKnownHostsFile", "/etc/ssh/ssh_known_hosts"],
+  ["UserKnownHostsFile", "/dev/null"],
+  ["StrictHostKeyChecking", "yes"],
+] as const
 
 export const stepEnv = (
-  config: ResolvedConfig,
+  config: Extract<ResolvedConfig, { readonly authMode: "ssh-ca" }>,
 ): Record<string, string> => ({
   STEP_FINGERPRINT: config.stepFingerprint,
   STEP_CA_URL: config.stepCaUrl,
@@ -77,11 +81,11 @@ export const ensureAuth = (
     const fs = yield* FileSystem.FileSystem
     yield* fs.makeDirectory(config.stateDir, { recursive: true })
 
-    if (!config.useSshCa) {
+    if (config.authMode === "host") {
+      const options = [macOption, ...hostAuthOptions]
       return {
-        useSshCa: false,
-        sshArgs: [...macArgs, "-o", "StrictHostKeyChecking=no"],
-        instanceSshArgs: [...macArgs],
+        controlOptions: options,
+        instanceOptions: options,
       }
     }
 
@@ -176,27 +180,24 @@ export const ensureAuth = (
       yield* fs.writeFileString(paths.provisionerFile, `${config.provisioner}\n`)
     }
 
-    const identityArgs = [
-      "-i",
-      paths.key,
-      "-o",
-      `CertificateFile=${paths.cert}`,
-      "-o",
-      "IdentitiesOnly=yes",
+    const identityOptions: ReadonlyArray<SshOption> = [
+      ["IdentityFile", paths.key],
+      ["CertificateFile", paths.cert],
+      ["IdentitiesOnly", "yes"],
     ] as const
 
     return {
-      useSshCa: true,
-      identityFile: paths.key,
-      certificateFile: paths.cert,
-      sshArgs: [
-        ...macArgs,
-        ...identityArgs,
-        "-o",
-        `UserKnownHostsFile=${paths.knownHosts}`,
-        "-o",
-        "StrictHostKeyChecking=accept-new",
+      controlOptions: [
+        macOption,
+        ...identityOptions,
+        ["UserKnownHostsFile", paths.knownHosts],
+        ["StrictHostKeyChecking", "accept-new"],
       ],
-      instanceSshArgs: [...macArgs, ...identityArgs],
+      instanceOptions: [
+        macOption,
+        ...identityOptions,
+        ["StrictHostKeyChecking", "no"],
+        ["UserKnownHostsFile", "/dev/null"],
+      ],
     }
   })
