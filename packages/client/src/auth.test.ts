@@ -20,7 +20,7 @@ describe("caUnreachableHint", () => {
 
   test("tells how to join Tailscale otherwise", () => {
     const hint = caUnreachableHint("pu", "connection refused")
-    expect(hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
+    expect(hint).toContain("sudo tailscale up --login-server=https://headscale.in1.juspay.net")
     expect(hint).not.toContain("Is pu reachable?")
   })
 })
@@ -66,7 +66,7 @@ exit 1
     if (!(error instanceof AuthError)) return
     expect(error.message).toContain("Could not reach the SSH CA at pu")
     expect(error.hint).toContain("error downloading root certificate")
-    expect(error.hint).toContain("sudo tailscale up --login-server=https://headscale.nixos.asia")
+    expect(error.hint).toContain("sudo tailscale up --login-server=https://headscale.in1.juspay.net")
   })
 
   test("a present-but-broken step is not reported as missing from PATH", async () => {

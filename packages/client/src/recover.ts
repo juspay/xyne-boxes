@@ -3,7 +3,7 @@
 export const SITE_URL = "https://juspay.github.io/xyne-boxes/"
 
 export const TAILSCALE_UP =
-  "sudo tailscale up --login-server=https://headscale.nixos.asia --hostname $(hostname -s)"
+  "sudo tailscale up --login-server=https://headscale.in1.juspay.net --hostname $(hostname -s)"
 
 export const CURL_INSTALL =
   "curl -fsSL https://raw.githubusercontent.com/juspay/xyne-boxes/nightly/installer/install.sh | sh"
