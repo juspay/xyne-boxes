@@ -1,0 +1,8 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "xyne-boxes",
+  "version": "1.0.0",
+  "description": "Shared APM source for the pu agent skill — provision and drive Incus boxes",
+  "repository": "https://github.com/juspay/xyne-boxes",
+  "license": "MIT"
+}
